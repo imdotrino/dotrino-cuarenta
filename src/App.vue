@@ -29,7 +29,7 @@
         class="topbar-coin"
         :lang="lang"
         href="https://ko-fi.com/dotrino"
-        repo="dotrino/cuarenta"
+        repo="imdotrino/dotrino-cuarenta"
         discord="https://discord.gg/D648uq7cth"
       ></dotrino-support>
     </header>
