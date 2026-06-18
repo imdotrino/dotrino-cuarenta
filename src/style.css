@@ -1,0 +1,193 @@
+/* Tema global del ajedrez — premium "nogal / marfil / latón" (dark).
+ * Redefine las variables de theme.css (este archivo se importa después) para que
+ * TODOS los componentes adopten el look nuevo. Fuentes del ecosistema:
+ * Space Grotesk (titulares) + Inter (cuerpo) + JetBrains Mono (código).
+ */
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+:root {
+  /* Tipografía */
+  --font-headline: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* Superficies (nogal cálido, oscuro) */
+  --color-background: #15120d;
+  --color-surface: #1d1811;
+  --color-surface-variant: #2a2217;
+  --color-card-bg: #1d1811;
+  --bg-elev: #241d14;
+
+  /* Texto (marfil) */
+  --color-text: #efe7d6;
+  --color-text-secondary: #b6a78b;
+  --color-text-tertiary: #8a7c64;
+  --color-text-on-primary: #1a1408;
+  --color-text-on-dark: #efe7d6;
+
+  /* Bordes */
+  --color-border: #352a1d;
+  --color-border-light: #2a2217;
+  --color-border-dark: #4c3c2a;
+
+  /* Acento latón + verde tablero */
+  --color-primary: #cda350;          /* latón */
+  --color-primary-light: #ddb766;
+  --color-primary-dark: #b0852f;
+  --color-secondary: #6f9351;        /* verde tablero */
+  --color-secondary-light: #86ab66;
+  --color-secondary-dark: #587a3e;
+
+  /* Semánticos */
+  --color-success: #7aa64f; --color-success-light: #8fbf63; --color-success-dark: #5f8a3a;
+  --color-warning: #d6a23a; --color-warning-light: #e6b551; --color-warning-dark: #b9882a;
+  --color-error: #c75c4d;   --color-error-light: #d6705f;   --color-error-dark: #a64738;
+  --color-info: #5e9aa6;    --color-info-light: #74b2bd;    --color-info-dark: #4a7e89;
+
+  /* Componentes */
+  --color-header-bg: linear-gradient(180deg, #221a10 0%, #15120d 100%);
+  --color-card-shadow: rgba(0, 0, 0, 0.5);
+
+  /* Botones */
+  --color-button-primary: var(--color-primary);
+  --color-button-primary-hover: var(--color-primary-dark);
+  --color-button-primary-text: #1a1408;
+  --color-button-secondary: #2a2217;
+  --color-button-secondary-hover: #352a1d;
+  --color-button-secondary-text: var(--color-text);
+  --color-button-success: var(--color-secondary);
+  --color-button-success-hover: var(--color-secondary-dark);
+  --color-button-success-text: #0f1408;
+  --color-button-danger: var(--color-error);
+  --color-button-danger-hover: var(--color-error-dark);
+  --color-button-danger-text: #fff;
+  --color-button-warning: var(--color-warning);
+
+  /* Tablero (estilo torneo) */
+  --board-light: #ebecd0;
+  --board-dark: #6f9351;
+
+  /* Radios y sombras */
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.35);
+  --shadow-md: 0 6px 20px rgba(0,0,0,.40);
+  --shadow-lg: 0 18px 48px rgba(0,0,0,.55);
+
+  color-scheme: dark;
+  color: var(--color-text);
+  background-color: var(--color-background);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  display: block;
+  background:
+    radial-gradient(1200px 700px at 80% -10%, rgba(205,163,80,.07), transparent 60%),
+    var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+#app { max-width: none; margin: 0; padding: 0; text-align: left; width: 100%; }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-headline);
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+a { color: var(--color-primary); text-decoration: none; font-weight: 500; }
+a:hover { color: var(--color-primary-light); }
+
+/* Botones base (los componentes pueden refinar) */
+button {
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-border);
+  padding: 0.6em 1.1em;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  background-color: var(--color-button-secondary);
+  color: var(--color-button-secondary-text);
+  cursor: pointer;
+  transition: transform .12s ease, border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+button:hover { background-color: var(--color-button-secondary-hover); border-color: var(--color-border-dark); transform: translateY(-1px); }
+button:active { transform: translateY(0); }
+button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+button.primary {
+  background-color: var(--color-button-primary);
+  color: var(--color-button-primary-text);
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(205,163,80,.25);
+}
+button.primary:hover { background-color: var(--color-button-primary-hover); }
+button.success { background-color: var(--color-button-success); color: var(--color-button-success-text); border-color: transparent; }
+button.success:hover { background-color: var(--color-button-success-hover); }
+button.danger { background-color: var(--color-button-danger); color: var(--color-button-danger-text); border-color: transparent; }
+button.danger:hover { background-color: var(--color-button-danger-hover); }
+
+input, select, textarea {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--color-text);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: 0.7em 0.9em;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(205,163,80,.18);
+}
+
+code, pre {
+  font-family: var(--font-mono);
+  background-color: var(--color-surface-variant);
+  padding: 2px 6px;
+  border-radius: var(--border-radius-sm);
+  color: var(--color-text);
+  font-size: 0.85em;
+}
+
+.card {
+  padding: 1.5rem;
+  background-color: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+/* Chip reutilizable */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  background: var(--color-surface-variant); border: 1px solid var(--color-border);
+  font-size: 12px; color: var(--color-text-secondary);
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--color-background); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-border-dark); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
