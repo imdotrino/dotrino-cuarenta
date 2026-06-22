@@ -1,5 +1,7 @@
 # Cuarenta (40) · Dotrino
 
+> **Parte del ecosistema [Dotrino](https://dotrino.com).** Misión: aplicaciones que resuelven problemas comunes, respetando tu privacidad — sin anuncios, sin cookies, sin rastreo de datos, sin vender tu identidad a nadie.
+
 El **Cuarenta** (o **40**), el juego de naipes tradicional del **Ecuador**, en línea
 para **2 ó 4 jugadores**. Parte del ecosistema [Dotrino](https://dotrino.com/):
 *tu información, en tu servidor, bajo tus reglas*.
