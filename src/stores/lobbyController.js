@@ -63,6 +63,13 @@ async function ensureIdentity () {
   return identity
 }
 
+// Instancia de identidad ya conectada (la MISMA del lobby: una sola conexión al
+// vault por app). La consume <dotrino-topbar> para el avatar del perfil activo.
+async function getIdentity () {
+  await ensureIdentity()
+  return identity
+}
+
 async function refreshIdentity () {
   await ensureIdentity()
   if (!identity) return
@@ -426,7 +433,7 @@ export const lobbyController = {
   connectionError, room, snapshot,
   // identidad / reputación
   myPubkey, myNickname, peerIdentities, trustMap, refreshIdentity,
-  setMyNickname, ratePeer, setPeerNickname, getReputation, getProfileProvider, myElo, eloOf,
+  setMyNickname, ratePeer, setPeerNickname, getIdentity, getReputation, getProfileProvider, myElo, eloOf,
   // nickname requerido
   hasNick, nickModalOpen, requireNick, submitNick, cancelNick,
   // asientos / juego

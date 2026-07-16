@@ -3,7 +3,10 @@ import { createPinia } from 'pinia'
 import './styles/theme.css'
 import './style.css'
 import App from './App.vue'
-import '@dotrino/support'
+// Barra superior estándar del ecosistema (§5): trae marca + volver + idioma +
+// perfil + moneda de support en UN componente. La app NO re-arma el header ni
+// carga <dotrino-support> por su cuenta: el topbar ya lo incluye.
+import '@dotrino/topbar'
 import '@dotrino/profile'
 import '@dotrino/install'
 import { createBackNav } from '@dotrino/nav'

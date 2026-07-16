@@ -1,38 +1,40 @@
 <template>
   <div class="app">
-    <!-- Topbar: marca · acciones · moneda de support -->
-    <header class="topbar">
-      <dotrino-back class="cc-back"></dotrino-back>
-      <div class="brand">
+    <!-- Barra superior ESTÁNDAR del ecosistema (§5): trae volver + idioma +
+         botón de perfil (§6.1) + moneda de support. La app no re-arma el header:
+         solo aporta su marca y sus acciones por slot. -->
+    <dotrino-topbar
+      ref="topbarRef"
+      brand-href="./"
+      :lang="lang"
+      profile
+      support-href="https://ko-fi.com/dotrino"
+      support-repo="imdotrino/dotrino-cuarenta"
+      support-discord="https://discord.gg/D648uq7cth"
+      @dotrino-lang="onLang"
+      @dotrino-profile="onProfileClick"
+    >
+      <!-- Marca a medida: el Cuarenta lleva bajada además del nombre. -->
+      <span slot="brand" class="brand">
         <img :src="icon" alt="" class="brand-logo" />
-        <div class="brand-text">
+        <span class="brand-text">
           <span class="brand-name">{{ t.brand }}</span>
           <span class="brand-tag">{{ t.tagline }}</span>
-        </div>
-      </div>
-      <div class="actions">
-        <dotrino-install class="cc-install" :lang="lang" data-testid="install-btn"></dotrino-install>
-        <button class="ghost" @click="rulesOpen = true" :title="t.rules" data-testid="rules-btn">?</button>
-        <div class="lang-selector" role="group" aria-label="es / en">
-          <button :class="{ on: lang === 'es' }" @click="setLang('es')" data-testid="lang-es">ES</button>
-          <button :class="{ on: lang === 'en' }" @click="setLang('en')" data-testid="lang-en">EN</button>
-        </div>
-        <button class="ghost" @click="settingsOpen = true" :title="t.identity" data-testid="settings-btn">⚙</button>
-        <span v-if="L.myElo.value && L.myElo.value.elo != null" class="elo-badge" title="ELO Cuarenta" data-testid="my-elo">ELO {{ L.myElo.value.elo }}</span>
-        <button class="ghost" @click="openMyProfile" :title="t.identity" data-testid="my-profile" aria-label="Mi perfil">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:19px;height:19px">
-            <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" />
-          </svg>
-        </button>
-      </div>
-      <dotrino-support
-        class="topbar-coin"
-        :lang="lang"
-        href="https://ko-fi.com/dotrino"
-        repo="imdotrino/dotrino-cuarenta"
-        discord="https://discord.gg/D648uq7cth"
-      ></dotrino-support>
-    </header>
+        </span>
+      </span>
+
+      <!-- Acciones propias, en el cluster derecho (a la izquierda del idioma).
+           OJO con el ORDEN: el grupo de acciones del topbar es `row-reverse`, así
+           que estos elementos se pintan de DERECHA A IZQUIERDA. Van a propósito en
+           orden inverso al visual para que se vean como siempre:
+           [Instalar] [?] [⚙] [ELO] · ES|EN · perfil · moneda.
+           Sueltos (sin contenedor) para que sean items del flex del topbar y
+           envuelvan uno a uno cuando falte ancho, en vez de bajar en bloque. -->
+      <span v-if="L.myElo.value && L.myElo.value.elo != null" slot="end" class="elo-badge" title="ELO Cuarenta" data-testid="my-elo">ELO {{ L.myElo.value.elo }}</span>
+      <button slot="end" class="ghost" @click="settingsOpen = true" :title="t.identity" data-testid="settings-btn">⚙</button>
+      <button slot="end" class="ghost" @click="rulesOpen = true" :title="t.rules" data-testid="rules-btn">?</button>
+      <dotrino-install slot="end" class="cc-install" :lang="lang" data-testid="install-btn"></dotrino-install>
+    </dotrino-topbar>
 
     <main>
       <CuarentaGame v-if="L.inRoom.value" @leave="onLeave" @rate="openRating" />
@@ -82,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, watch, onMounted } from 'vue'
+import { ref, shallowRef, nextTick, watch, watchEffect, onMounted } from 'vue'
 import { t, lang, setLang } from './i18n'
 import { lobbyController as L } from './stores/lobbyController'
 import { startAppTutorial } from './lib/tutorial'
@@ -96,6 +98,19 @@ import icon from './assets/icon.svg'
 const settingsOpen = ref(false)
 const rulesOpen = ref(false)
 const ratingTarget = ref(null)
+
+// ── Topbar estándar ────────────────────────────────────────────────
+// Le pasamos los pilares que la app YA maneja (una sola conexión al vault, la
+// del lobby) para que derive el avatar del perfil activo (§6.1). shallowRef: la
+// identidad es una instancia con estado propio, no debe envolverse en un proxy
+// reactivo profundo.
+const topbarRef = ref(null)
+const identityInst = shallowRef(null)
+const reputationInst = shallowRef(null)
+
+// El idioma lo persiste el topbar en la clave común del ecosistema
+// ('dotrino.lang'); acá solo reflejamos su evento en el i18n de la app.
+function onLang (e) { setLang(e?.detail?.lang) }
 
 // Volver unificado: el botón físico / chevron cierra el modal abierto antes de
 // salir hacia dotrino.com.
@@ -130,8 +145,16 @@ function openRating (seat) {
   }
 }
 
-// "Mi perfil": botón del header (a la izquierda de la moneda de soporte) que abre
-// el MISMO Web Component compartido en modo self con mi identidad del vault.
+// "Mi perfil": el botón lo pone el topbar (§6.1). El modal, en cambio, lo abre la
+// app: el Cuarenta muestra su ELO en la tarjeta (indicators="elo:cuarenta") y el
+// modal propio del topbar no contempla indicadores. El evento es cancelable
+// justamente para esto: lo prevenimos y abrimos el nuestro (mismo Web Component
+// compartido <dotrino-profile>, no una tarjeta casera).
+function onProfileClick (e) {
+  e.preventDefault()
+  openMyProfile()
+}
+
 const myProfilePk = ref(null)
 async function openMyProfile () {
   await L.refreshIdentity()
@@ -153,6 +176,16 @@ const profileTheme = {
   '--ccp-online': 'var(--color-success)', '--ccp-affinity': 'var(--color-secondary)',
   '--ccp-input-bg': 'var(--color-background)', '--ccp-radius': '10px',
 }
+
+// Cablea los pilares al topbar en cuanto existan (el avatar del perfil activo y,
+// si algún día abre su propio modal, el tema del Cuarenta).
+watchEffect(() => {
+  const tb = topbarRef.value
+  if (!tb) return
+  tb.identity = identityInst.value ?? null
+  tb.reputation = reputationInst.value ?? null
+  tb.profileTheme = profileTheme
+})
 
 const rulesHtml = `
   <p>El <b>Cuarenta</b> es el juego de naipes tradicional del Ecuador, para <b>2 ó 4 jugadores</b>
@@ -187,6 +220,12 @@ const rulesHtml = `
 
 onMounted(() => {
   L.refreshIdentity?.()
+  // Pilares para el topbar: reusamos la identidad YA conectada por el lobby (no
+  // abrimos una segunda conexión al vault).
+  L.getIdentity().then((id) => {
+    identityInst.value = id || null
+    if (id) reputationInst.value = L.getReputation() || null
+  }).catch(() => {})
   // API para tests E2E (Playwright): operar sin depender de coordenadas.
   window.__cuarenta = {
     L,
@@ -218,15 +257,21 @@ onMounted(() => {
 
 <style scoped>
 .app { min-height: 100vh; display: flex; flex-direction: column; }
-.topbar {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left));
-  padding-top: max(10px, env(safe-area-inset-top));
-  background: var(--color-header-bg); border-bottom: 1px solid var(--color-border);
+
+/* Topbar del ecosistema: el componente NO es sticky por sí mismo y viene con el
+   tema oscuro/morado por defecto — lo fijamos y lo vestimos con la paleta
+   "nogal / latón" del Cuarenta desde el host. */
+dotrino-topbar {
   position: sticky; top: 0; z-index: 50;
+  --dotrino-topbar-bg: var(--color-header-bg);
+  --dotrino-topbar-border: var(--color-border);
+  --dotrino-topbar-text: var(--color-text);
+  --dotrino-topbar-muted: var(--color-text-secondary);
+  --dotrino-topbar-accent: var(--color-primary);
+  --dotrino-topbar-accent-text: var(--color-text-on-primary);
+  --dotrino-topbar-font: var(--font-body);
 }
-.cc-back { color: var(--color-text); --cc-back-size: 34px; margin-left: -4px; flex-shrink: 0; }
-/* Botón "Instalar App" (Web Component): pastilla de texto con ícono, acorde al header. */
+/* Botón "Instalar App" (Web Component): vive en light DOM, lo viste la app. */
 .cc-install {
   flex-shrink: 0;
   --cc-install-color: var(--color-primary);
@@ -241,27 +286,17 @@ onMounted(() => {
 .brand-text { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
 .brand-name { font-family: var(--font-headline); font-weight: 700; font-size: 1.15rem; }
 .brand-tag { font-size: 0.72rem; color: var(--color-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.actions { display: flex; gap: 6px; margin-left: auto; align-items: center; }
+/* Móvil (§5): la marca se queda en SU fila a la izquierda y las acciones bajan
+   completas a una segunda fila alineada a la derecha. Por defecto el topbar las
+   envuelve de una en una: con las 4 acciones propias del Cuarenta (instalar,
+   reglas, ajustes, ELO) más idioma/perfil/moneda, eso dejaba casi un botón por
+   renglón (barra de ~190px). `flex-basis: 100%` sobre el part `actions` les da
+   la fila entera, que es justo el patrón de la convención. */
+@media (max-width: 560px) {
+  dotrino-topbar::part(actions) { flex-basis: 100%; }
+}
 .elo-badge { font-size: .8rem; font-weight: 700; color: var(--color-primary); border: 1px solid var(--color-primary); border-radius: 8px; padding: 4px 8px; white-space: nowrap; }
 button.ghost { background: transparent; border: 1px solid var(--color-border); width: 38px; height: 38px; padding: 0; border-radius: 10px; font-size: 1rem; display: inline-flex; align-items: center; justify-content: center; }
-/* Selector de idioma: toggle que SIEMPRE muestra ambas opciones (ES/EN), con la
-   activa resaltada (patrón del ecosistema; ver CONVENCIONES-APPS §9). */
-.lang-selector { display: inline-flex; border: 1px solid var(--color-border); border-radius: 999px; overflow: hidden; flex: 0 0 auto; }
-.lang-selector button { background: transparent; color: var(--color-text-secondary); border: none; width: auto; height: 38px; padding: 0 11px; font-size: 12px; font-weight: 700; cursor: pointer; }
-.lang-selector button:hover { color: var(--color-text); }
-.lang-selector button.on { background: var(--color-primary); color: #1a1408; }
-.topbar-coin { flex: 0 0 auto; }
-
-/* Móvil: la marca (logo + nombre) se queda en su fila; los botones de acción
-   bajan a una SEGUNDA fila alineada a la derecha, para que no empujen ni se monten
-   sobre el header. Convención del ecosistema (CONVENCIONES-APPS §5). */
-@media (max-width: 560px) {
-  .topbar { flex-wrap: wrap; row-gap: 8px; }
-  .cc-back { order: 0; }
-  .brand { order: 1; flex: 1 1 auto; }
-  .topbar-coin { order: 2; }
-  .actions { order: 3; flex-basis: 100%; justify-content: flex-end; margin-left: 0; }
-}
 main { flex: 1; padding-bottom: env(safe-area-inset-bottom); }
 
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }

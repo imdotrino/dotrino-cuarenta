@@ -274,8 +274,30 @@ const messages = {
   }
 }
 
+// La preferencia de idioma es la del ECOSISTEMA: la persiste <dotrino-topbar> en
+// 'dotrino.lang' y es compartida por todas las apps. Aquí solo la leemos/escribimos
+// con la misma clave; el toggle vive en el topbar (§5/§9).
+const LANG_KEY = 'dotrino.lang'
+const LEGACY_LANG_KEY = 'cuarenta_lang'
+
+// Migración de un solo uso: quien ya había elegido idioma en el Cuarenta conserva
+// su preferencia al pasar a la clave común (si no, se le reseteaba al detectar).
+function migrateLegacyLang () {
+  if (typeof localStorage === 'undefined') return
+  try {
+    const legacy = localStorage.getItem(LEGACY_LANG_KEY)
+    if (!legacy) return
+    if (!localStorage.getItem(LANG_KEY) && (legacy === 'es' || legacy === 'en')) {
+      localStorage.setItem(LANG_KEY, legacy)
+    }
+    localStorage.removeItem(LEGACY_LANG_KEY)
+  } catch (_) { /* modo privado */ }
+}
+
 function detect () {
-  const saved = (typeof localStorage !== 'undefined' && localStorage.getItem('cuarenta_lang')) || ''
+  migrateLegacyLang()
+  let saved = ''
+  try { saved = (typeof localStorage !== 'undefined' && localStorage.getItem(LANG_KEY)) || '' } catch (_) {}
   if (saved === 'es' || saved === 'en') return saved
   const nav = (typeof navigator !== 'undefined' && (navigator.language || '')).toLowerCase()
   return nav.startsWith('es') ? 'es' : 'en'
@@ -285,6 +307,6 @@ export const lang = ref(detect())
 export const t = computed(() => messages[lang.value] || messages.es)
 export function setLang (l) {
   lang.value = (l === 'en') ? 'en' : 'es'
-  try { localStorage.setItem('cuarenta_lang', lang.value) } catch (_) {}
+  try { localStorage.setItem(LANG_KEY, lang.value) } catch (_) {}
 }
 export function toggleLang () { setLang(lang.value === 'es' ? 'en' : 'es') }
