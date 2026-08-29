@@ -345,7 +345,7 @@ async function submitNick (v) {
   try {
     await setMyNickname(name)
   } catch (e) {
-    console.warn('No se pudo guardar el nick en tu identidad:', e?.message || e)
+    console.warn('Could not save the nickname to the identity:', e?.message || e)
     return false
   }
   nickModalOpen.value = false
