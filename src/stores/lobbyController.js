@@ -254,13 +254,17 @@ async function createTable (vis = 'public', size = 2) {
   } catch (e) { connectionError.value = e?.message; return false }
 }
 
-async function joinTable (hostToken) {
+// `hostPubkey` es la identidad del host: con ella el saludo sale SELLADO desde el primer
+// mensaje (@dotrino/lobby ≥ 0.8.0). La trae el resumen de la lista de mesas; por un enlace
+// compartido no viene, y entonces la mesa se presenta y la pregunta.
+async function joinTable (hostToken, hostPubkey = null) {
   if (!hostToken) return false
   if (!lobby) { if (!await connect()) return false }
   mode.value = 'guest'
   visibility.value = null
+  const known = hostPubkey || (publicRooms.value.find(r => r.roomId === hostToken) || {}).hostPubkey || null
   try {
-    const r = await lobby.joinRoom(hostToken, { playerName: myNickname.value })
+    const r = await lobby.joinRoom(hostToken, { playerName: myNickname.value, hostPubkey: known })
     _bind(r)
     return true
   } catch (e) {

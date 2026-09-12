@@ -49,7 +49,7 @@
             </span>
           </div>
           <div class="room-actions">
-            <button class="primary sm" @click="joinId(r.roomId)" :disabled="busy" :data-testid="'join-' + r.roomId">{{ t.join }}</button>
+            <button class="primary sm" @click="joinId(r.roomId, r.hostPubkey)" :disabled="busy" :data-testid="'join-' + r.roomId">{{ t.join }}</button>
           </div>
         </li>
       </ul>
@@ -105,10 +105,11 @@ function join () {
   if (!id) return
   joinId(id)
 }
-function joinId (id) {
+// La pubkey del host viene en el resumen de la mesa: con ella el saludo ya sale sellado.
+function joinId (id, hostPubkey = null) {
   withNick(async () => {
     busy.value = true; error.value = ''
-    const ok = await L.joinTable(id)
+    const ok = await L.joinTable(id, hostPubkey)
     busy.value = false
     if (ok) emit('entered'); else error.value = L.connectionError.value || t.value.errCode
   })

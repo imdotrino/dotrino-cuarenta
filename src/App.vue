@@ -230,7 +230,7 @@ onMounted(() => {
   window.__cuarenta = {
     L,
     async createTable (vis = 'public', size = 2) { return L.createTable(vis, size) },
-    async joinTable (token) { return L.joinTable(token) },
+    async joinTable (token, hostPubkey = null) { return L.joinTable(token, hostPubkey) },
     myToken () { return L.myToken.value },
     takeSeat (id) { return L.takeSeat(id) },
     setReady (b) { return L.setReady(b) },
