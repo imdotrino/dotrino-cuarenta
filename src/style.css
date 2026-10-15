@@ -1,81 +1,70 @@
-/* Tema global del ajedrez — premium "nogal / marfil / latón" (dark).
- * Redefine las variables de theme.css (este archivo se importa después) para que
- * TODOS los componentes adopten el look nuevo. Fuentes del ecosistema:
- * Space Grotesk (titulares) + Inter (cuerpo) + JetBrains Mono (código).
+/* Tema global de Cuarenta: los colores, las fuentes y la geometría son los del ecosistema
+ * (@dotrino/theme, CONVENCIONES §5), con los nombres de siempre (--color-*) para que los
+ * componentes no cambien. Lo propio del juego son las cartas y la mesa. Claro u oscuro lo elige el tema.
  */
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 
 :root {
-  /* Tipografía */
-  --font-headline: "Space Grotesk", system-ui, sans-serif;
-  --font-body: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --font-headline: var(--dt-font-brand);
+  --font-body: var(--dt-font);
+  --font-mono: var(--dt-font-mono);
 
-  /* Superficies (nogal cálido, oscuro) */
-  --color-background: #15120d;
-  --color-surface: #1d1811;
-  --color-surface-variant: #2a2217;
-  --color-card-bg: #1d1811;
-  --bg-elev: #241d14;
+  --color-background: var(--dt-bg);
+  --color-surface: var(--dt-surface);
+  --color-surface-variant: var(--dt-surface-2);
+  --color-card-bg: var(--dt-surface);
+  --bg-elev: var(--dt-surface-2);
 
-  /* Texto (marfil) */
-  --color-text: #efe7d6;
-  --color-text-secondary: #b6a78b;
-  --color-text-tertiary: #8a7c64;
-  --color-text-on-primary: #1a1408;
-  --color-text-on-dark: #efe7d6;
+  --color-text: var(--dt-text);
+  --color-text-secondary: var(--dt-text-dim);
+  --color-text-tertiary: var(--dt-text-faint);
+  --color-text-on-primary: var(--dt-accent-ink);
+  --color-text-on-dark: var(--dt-surface);
 
-  /* Bordes */
-  --color-border: #352a1d;
-  --color-border-light: #2a2217;
-  --color-border-dark: #4c3c2a;
+  --color-border: var(--dt-line-soft);
+  --color-border-light: var(--dt-line-soft);
+  --color-border-dark: var(--dt-line);
 
-  /* Acento latón + verde tablero */
-  --color-primary: #cda350;          /* latón */
-  --color-primary-light: #ddb766;
-  --color-primary-dark: #b0852f;
-  --color-secondary: #6f9351;        /* verde tablero */
-  --color-secondary-light: #86ab66;
-  --color-secondary-dark: #587a3e;
+  --color-primary: var(--dt-accent);
+  --color-primary-light: var(--dt-accent);
+  --color-primary-dark: var(--dt-accent-press);
+  --color-secondary: var(--dt-mint);
+  --color-secondary-light: var(--dt-mint);
+  --color-secondary-dark: var(--dt-mint);
 
-  /* Semánticos */
-  --color-success: #7aa64f; --color-success-light: #8fbf63; --color-success-dark: #5f8a3a;
-  --color-warning: #d6a23a; --color-warning-light: #e6b551; --color-warning-dark: #b9882a;
-  --color-error: #c75c4d;   --color-error-light: #d6705f;   --color-error-dark: #a64738;
-  --color-info: #5e9aa6;    --color-info-light: #74b2bd;    --color-info-dark: #4a7e89;
+  --color-success: var(--dt-ok); --color-success-light: var(--dt-ok); --color-success-dark: var(--dt-ok);
+  --color-warning: var(--dt-busy); --color-warning-light: var(--dt-busy); --color-warning-dark: var(--dt-busy);
+  --color-error: var(--dt-error);   --color-error-light: var(--dt-error);   --color-error-dark: var(--dt-error);
+  --color-info: var(--dt-accent);    --color-info-light: var(--dt-accent);    --color-info-dark: var(--dt-accent-press);
 
-  /* Componentes */
-  --color-header-bg: linear-gradient(180deg, #221a10 0%, #15120d 100%);
-  --color-card-shadow: rgba(0, 0, 0, 0.5);
+  --color-header-bg: var(--dt-surface);
+  --color-card-shadow: var(--dt-shadow-color);
 
-  /* Botones */
-  --color-button-primary: var(--color-primary);
-  --color-button-primary-hover: var(--color-primary-dark);
-  --color-button-primary-text: #1a1408;
-  --color-button-secondary: #2a2217;
-  --color-button-secondary-hover: #352a1d;
-  --color-button-secondary-text: var(--color-text);
-  --color-button-success: var(--color-secondary);
-  --color-button-success-hover: var(--color-secondary-dark);
-  --color-button-success-text: #0f1408;
-  --color-button-danger: var(--color-error);
-  --color-button-danger-hover: var(--color-error-dark);
-  --color-button-danger-text: #fff;
-  --color-button-warning: var(--color-warning);
+  --color-button-primary: var(--dt-accent);
+  --color-button-primary-hover: var(--dt-accent-press);
+  --color-button-primary-text: var(--dt-accent-ink);
+  --color-button-secondary: var(--dt-surface-2);
+  --color-button-secondary-hover: var(--dt-surface-3);
+  --color-button-secondary-text: var(--dt-text);
+  --color-button-success: var(--dt-mint);
+  --color-button-success-hover: var(--dt-mint);
+  --color-button-success-text: var(--dt-accent-ink);
+  --color-button-danger: var(--dt-error);
+  --color-button-danger-hover: var(--dt-error);
+  --color-button-danger-text: var(--dt-surface);
+  --color-button-warning: var(--dt-busy);
 
   /* Tablero (estilo torneo) */
   --board-light: #ebecd0;
   --board-dark: #6f9351;
 
   /* Radios y sombras */
-  --border-radius-sm: 8px;
-  --border-radius-md: 12px;
-  --border-radius-lg: 16px;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,.35);
-  --shadow-md: 0 6px 20px rgba(0,0,0,.40);
-  --shadow-lg: 0 18px 48px rgba(0,0,0,.55);
+  --border-radius-sm: var(--dt-radius-sm);
+  --border-radius-md: var(--dt-radius-sm);
+  --border-radius-lg: var(--dt-radius);
+  --shadow-sm: 0 1px 2px var(--dt-shadow-color);
+  --shadow-md: var(--dt-shadow);
+  --shadow-lg: 0 18px 48px var(--dt-shadow-color);
 
-  color-scheme: dark;
   color: var(--color-text);
   background-color: var(--color-background);
   font-family: var(--font-body);
@@ -93,9 +82,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   display: block;
-  background:
-    radial-gradient(1200px 700px at 80% -10%, rgba(205,163,80,.07), transparent 60%),
-    var(--color-background);
+  background: var(--color-background);
   color: var(--color-text);
   font-family: var(--font-body);
 }
@@ -134,7 +121,7 @@ button.primary {
   background-color: var(--color-button-primary);
   color: var(--color-button-primary-text);
   border-color: transparent;
-  box-shadow: 0 4px 14px rgba(205,163,80,.25);
+  box-shadow: 0 4px 14px var(--dt-shadow-color);
 }
 button.primary:hover { background-color: var(--color-button-primary-hover); }
 button.success { background-color: var(--color-button-success); color: var(--color-button-success-text); border-color: transparent; }
@@ -155,7 +142,7 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(205,163,80,.18);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dt-accent) 18%, transparent);
 }
 
 code, pre {

@@ -203,5 +203,5 @@ const doImport = async () => {
 .confirm-layer { z-index: 1100; }
 .confirm-modal { max-width: 380px; }
 .actions-row.end { justify-content: flex-end; margin-top: 0.5rem; }
-.actions-row button.primary.danger { background: var(--color-error, #b33); border-color: var(--color-error, #b33); }
+.actions-row button.primary.danger { background: var(--color-error, var(--dt-error)); border-color: var(--color-error, var(--dt-error)); }
 </style>

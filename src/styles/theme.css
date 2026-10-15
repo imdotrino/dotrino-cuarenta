@@ -1,102 +1,75 @@
-/* Sistema de Temas - Variables CSS Centralizadas
- * ================================================
- * Este archivo define todas las variables de color para la aplicación.
- * Los temas claro/oscuro se manejan mediante media queries.
- */
+/* Variables de la app, apuntando al tema del ecosistema (@dotrino/theme, CONVENCIONES §5).
+   Los nombres de siempre se quedan para que los componentes no cambien; claro u oscuro lo
+   elige el tema (sistema o sol/luna del topbar). */
 
 :root {
-  /* ============ PALETA DE COLORES - TEMA CLARO ============ */
-  
-  /* Colores primarios (gradiente del header) */
-  --color-primary: #667eea;
-  --color-primary-light: #7c93e8;
-  --color-primary-dark: #5a67d8;
-  
-  --color-secondary: #764ba2;
-  --color-secondary-light: #8a5fc4;
-  --color-secondary-dark: #6b4390;
-  
-  /* Colores de fondo y superficie */
-  --color-background: #ffffff;
-  --color-surface: #f8f9fa;
-  --color-surface-variant: #e9ecef;
-  
-  /* Colores de texto */
-  --color-text: #333333;
-  --color-text-secondary: #666666;
-  --color-text-tertiary: #999999;
-  --color-text-on-primary: #ffffff;
-  --color-text-on-dark: #f8f9fa;
-  
-  /* Colores de bordes y separadores */
-  --color-border: #dee2e6;
-  --color-border-light: #e9ecef;
-  --color-border-dark: #ced4da;
-  
-  /* Colores semánticos (estados, alertas) */
-  --color-success: #28a745;
-  --color-success-light: #34ce57;
-  --color-success-dark: #218838;
-  
-  --color-warning: #ffc107;
-  --color-warning-light: #ffd43b;
-  --color-warning-dark: #e0a800;
-  
-  --color-error: #dc3545;
-  --color-error-light: #e74c3c;
-  --color-error-dark: #c82333;
-  
-  --color-info: #17a2b8;
-  --color-info-light: #39c0ed;
-  --color-info-dark: #138496;
-  
-  /* Colores específicos de componentes */
-  --color-header-bg: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-  --color-card-bg: var(--color-background);
-  --color-card-shadow: rgba(0, 0, 0, 0.1);
-  
-  /* Colores de botones */
-  --color-button-primary: var(--color-primary);
-  --color-button-primary-hover: var(--color-primary-dark);
-  --color-button-primary-text: var(--color-text-on-primary);
-  
-  --color-button-secondary: #6c757d;
-  --color-button-secondary-hover: #5a6268;
-  --color-button-secondary-text: var(--color-text-on-primary);
-  
-  --color-button-success: var(--color-success);
-  --color-button-success-hover: var(--color-success-dark);
-  --color-button-success-text: var(--color-text-on-primary);
-  
-  --color-button-danger: var(--color-error);
-  --color-button-danger-hover: var(--color-error-dark);
-  --color-button-danger-text: var(--color-text-on-primary);
-  
-  /* Colores de estado de juego */
-  --color-game-white: #f0d9b5;
-  --color-game-black: #b58863;
-  --color-game-highlight: rgba(255, 255, 0, 0.3);
-  --color-game-selected: rgba(33, 150, 243, 0.3);
-  
-  /* Transparencias */
-  --color-overlay: rgba(0, 0, 0, 0.7);
-  --color-overlay-light: rgba(0, 0, 0, 0.5);
-  --color-overlay-dark: rgba(0, 0, 0, 0.85);
-  
-  /* Sombras */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
-  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.2);
-  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.25);
-  
-  /* Bordes redondeados */
+  --color-primary: var(--dt-accent);
+  --color-primary-light: var(--dt-accent);
+  --color-primary-dark: var(--dt-accent-press);
+  --color-secondary: var(--dt-violet);
+  --color-secondary-light: var(--dt-violet);
+  --color-secondary-dark: var(--dt-violet);
+
+  --color-background: var(--dt-bg);
+  --color-surface: var(--dt-surface);
+  --color-surface-variant: var(--dt-surface-2);
+
+  --color-text: var(--dt-text);
+  --color-text-secondary: var(--dt-text-dim);
+  --color-text-tertiary: var(--dt-text-faint);
+  --color-text-on-primary: var(--dt-accent-ink);
+  --color-text-on-dark: var(--dt-surface);
+
+  --color-border: var(--dt-line-soft);
+  --color-border-light: var(--dt-line-soft);
+  --color-border-dark: var(--dt-line);
+
+  --color-success: var(--dt-ok);
+  --color-success-light: var(--dt-ok);
+  --color-success-dark: var(--dt-ok);
+  --color-warning: var(--dt-busy);
+  --color-warning-light: var(--dt-busy);
+  --color-warning-dark: var(--dt-busy);
+  --color-error: var(--dt-error);
+  --color-error-light: var(--dt-error);
+  --color-error-dark: var(--dt-error);
+  --color-info: var(--dt-accent);
+  --color-info-light: var(--dt-accent);
+  --color-info-dark: var(--dt-accent-press);
+
+  --color-header-bg: var(--dt-surface);
+  --color-card-bg: var(--dt-surface);
+  --color-card-shadow: var(--dt-shadow-color);
+
+  --color-button-primary: var(--dt-accent);
+  --color-button-primary-hover: var(--dt-accent-press);
+  --color-button-primary-text: var(--dt-accent-ink);
+  --color-button-secondary: var(--dt-surface-3);
+  --color-button-secondary-hover: var(--dt-line);
+  --color-button-secondary-text: var(--dt-text);
+  --color-button-success: var(--dt-mint);
+  --color-button-success-hover: var(--dt-mint);
+  --color-button-success-text: var(--dt-accent-ink);
+  --color-button-danger: var(--dt-error);
+  --color-button-danger-hover: var(--dt-error);
+  --color-button-danger-text: var(--dt-surface);
+
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-overlay-light: rgba(0, 0, 0, 0.45);
+  --color-overlay-dark: rgba(0, 0, 0, 0.8);
+  --color-primary-alpha: var(--dt-accent-tint);
+
+  --shadow-sm: 0 2px 4px var(--dt-shadow-color);
+  --shadow-md: 0 4px 8px var(--dt-shadow-color);
+  --shadow-lg: var(--dt-shadow);
+  --shadow-xl: 0 20px 40px var(--dt-shadow-color);
+
   --border-radius-sm: 4px;
-  --border-radius-md: 8px;
-  --border-radius-lg: 12px;
-  --border-radius-xl: 16px;
-  --border-radius-2xl: 24px;
-  
-  /* Espaciado */
+  --border-radius-md: var(--dt-radius-sm);
+  --border-radius-lg: var(--dt-radius-sm);
+  --border-radius-xl: var(--dt-radius);
+  --border-radius-2xl: var(--dt-radius-lg);
+
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
@@ -105,83 +78,7 @@
   --spacing-2xl: 48px;
 }
 
-/* ============ TEMA OSCURO ============ */
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Colores primarios (ajustados para mejor contraste en oscuro) */
-    --color-primary: #7c93e8;
-    --color-primary-light: #94a7ed;
-    --color-primary-dark: #5a67d8;
-    
-    --color-secondary: #8a5fc4;
-    --color-secondary-light: #9d74d6;
-    --color-secondary-dark: #6b4390;
-    
-    /* Colores de fondo y superficie (oscuros) */
-    --color-background: #121212;
-    --color-surface: #1e1e1e;
-    --color-surface-variant: #2d2d2d;
-    
-    /* Colores de texto (claros sobre fondos oscuros) */
-    --color-text: #f8f9fa;
-    --color-text-secondary: #adb5bd;
-    --color-text-tertiary: #6c757d;
-    --color-text-on-primary: #ffffff;
-    --color-text-on-dark: #f8f9fa;
-    
-    /* Colores de bordes y separadores */
-    --color-border: #495057;
-    --color-border-light: #6c757d;
-    --color-border-dark: #343a40;
-    
-    /* Colores semánticos (ajustados para modo oscuro) */
-    --color-success: #34ce57;
-    --color-success-light: #56d679;
-    --color-success-dark: #28a745;
-    
-    --color-warning: #ffd43b;
-    --color-warning-light: #ffe066;
-    --color-warning-dark: #ffc107;
-    
-    --color-error: #e74c3c;
-    --color-error-light: #f5655a;
-    --color-error-dark: #dc3545;
-    
-    --color-info: #39c0ed;
-    --color-info-light: #5bc9f5;
-    --color-info-dark: #17a2b8;
-    
-    /* Colores específicos de componentes (modo oscuro) */
-    --color-header-bg: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-    --color-card-bg: var(--color-surface);
-    --color-card-shadow: rgba(0, 0, 0, 0.3);
-    
-    /* Colores de botones (ajustados) */
-    --color-button-secondary: #6c757d;
-    --color-button-secondary-hover: #5a6268;
-    
-    /* Colores de estado de juego (mantenidos para contraste) */
-    --color-game-white: #f0d9b5;
-    --color-game-black: #b58863;
-    --color-game-highlight: rgba(255, 255, 0, 0.4);
-    --color-game-selected: rgba(33, 150, 243, 0.4);
-    
-    /* Transparencias (ajustadas para modo oscuro) */
-    --color-overlay: rgba(0, 0, 0, 0.8);
-    --color-overlay-light: rgba(0, 0, 0, 0.6);
-    --color-overlay-dark: rgba(0, 0, 0, 0.9);
-    
-    /* Sombras (más pronunciadas en modo oscuro) */
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
-    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.6);
-  }
-}
-
-/* ============ UTILIDADES ============ */
-
-/* Clases de utilidad para usar directamente en componentes */
+/* Utilidades */
 .text-primary {
   color: var(--color-text);
 }
@@ -194,17 +91,6 @@
   background-color: var(--color-surface);
 }
 
-.bg-card {
-  background-color: var(--color-card-bg);
-  box-shadow: var(--shadow-md);
-  border-radius: var(--border-radius-lg);
-}
-
-.border-default {
-  border: 1px solid var(--color-border);
-}
-
-/* Estados semánticos */
 .text-success {
   color: var(--color-success);
 }
@@ -219,33 +105,4 @@
 
 .text-info {
   color: var(--color-info);
-}
-
-/* Botones temáticos */
-.btn-primary {
-  background-color: var(--color-button-primary);
-  color: var(--color-button-primary-text);
-  border: none;
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn-primary:hover {
-  background-color: var(--color-button-primary-hover);
-}
-
-.btn-secondary {
-  background-color: var(--color-button-secondary);
-  color: var(--color-button-secondary-text);
-  border: none;
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn-secondary:hover {
-  background-color: var(--color-button-secondary-hover);
 }

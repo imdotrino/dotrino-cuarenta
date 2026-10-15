@@ -7,7 +7,7 @@
       ref="topbarRef"
       brand-href="./"
       :lang="lang"
-      profile
+      profile theme
       support-href="https://ko-fi.com/dotrino"
       support-repo="imdotrino/dotrino-cuarenta"
       support-discord="https://discord.gg/D648uq7cth"
@@ -75,7 +75,6 @@
       mode="self"
       indicators="elo:cuarenta"
       :lang="lang"
-      :style="profileTheme"
       :pubkey="myProfilePk"
       :name="L.myNickname.value || ''"
       @cc-profile-close="myProfilePk = null"
@@ -166,17 +165,6 @@ function bindMyProfile (el) {
   L.getProfileProvider().then((p) => { if (p) el.provider = p })
 }
 useBackLayer(myProfilePk, { onClose: () => { myProfilePk.value = null } })
-// Tema del perfil acorde a Cuarenta (mismas variables --color-* de la app).
-const profileTheme = {
-  '--ccp-bg': 'var(--color-card-bg)', '--ccp-bg-2': 'var(--color-surface)',
-  '--ccp-bg-3': 'var(--color-surface-variant)', '--ccp-bg-4': 'var(--color-border-light)',
-  '--ccp-border': 'var(--color-border)', '--ccp-text': 'var(--color-text)',
-  '--ccp-muted': 'var(--color-text-secondary)', '--ccp-accent': 'var(--color-primary)',
-  '--ccp-accent-2': 'var(--color-primary-dark)', '--ccp-derived': '#d49a00', '--ccp-gold': '#f5b301',
-  '--ccp-online': 'var(--color-success)', '--ccp-affinity': 'var(--color-secondary)',
-  '--ccp-input-bg': 'var(--color-background)', '--ccp-radius': '10px',
-}
-
 // Cablea los pilares al topbar en cuanto existan (el avatar del perfil activo y,
 // si algún día abre su propio modal, el tema del Cuarenta).
 watchEffect(() => {
@@ -184,7 +172,6 @@ watchEffect(() => {
   if (!tb) return
   tb.identity = identityInst.value ?? null
   tb.reputation = reputationInst.value ?? null
-  tb.profileTheme = profileTheme
 })
 
 const rulesHtml = `
@@ -263,13 +250,6 @@ onMounted(() => {
    "nogal / latón" del Cuarenta desde el host. */
 dotrino-topbar {
   position: sticky; top: 0; z-index: 50;
-  --dotrino-topbar-bg: var(--color-header-bg);
-  --dotrino-topbar-border: var(--color-border);
-  --dotrino-topbar-text: var(--color-text);
-  --dotrino-topbar-muted: var(--color-text-secondary);
-  --dotrino-topbar-accent: var(--color-primary);
-  --dotrino-topbar-accent-text: var(--color-text-on-primary);
-  --dotrino-topbar-font: var(--font-body);
 }
 /* Botón "Instalar App" (Web Component): vive en light DOM, lo viste la app. */
 .cc-install {

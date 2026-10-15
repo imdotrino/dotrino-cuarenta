@@ -593,10 +593,10 @@ button.xs { padding: 0.3em 0.7em; font-size: 0.72rem; white-space: nowrap; }
 /* Turno (cualquier jugador): anillo inset + GLOW EXTERNO para ver claramente a
    quién le toca. El box-shadow no afecta layout, así que el tamaño/posición del
    asiento no cambian. */
-.seat.turn { box-shadow: inset 0 0 0 2px var(--color-primary), 0 0 18px 4px rgba(205,163,80,.7); }
+.seat.turn { box-shadow: inset 0 0 0 2px var(--color-primary), 0 0 18px 4px color-mix(in srgb, var(--dt-accent) 70%, transparent); }
 /* MI turno: glow estático más fuerte en mi asiento (sin palpitar). */
 /* MI turno: anillo inset + glow externo aún más fuerte. */
-.seat.me.turn { box-shadow: inset 0 0 0 3px var(--color-primary-light), inset 0 0 14px rgba(205,163,80,.55), 0 0 28px 8px rgba(205,163,80,.9); }
+.seat.me.turn { box-shadow: inset 0 0 0 3px var(--color-primary-light), inset 0 0 14px color-mix(in srgb, var(--dt-accent) 55%, transparent), 0 0 28px 8px color-mix(in srgb, var(--dt-accent) 90%, transparent); }
 .seat.disc { opacity: 0.6; }
 .seat-head { display: flex; align-items: center; justify-content: center; gap: 4px; max-width: 100%; width: 100%; }
 /* el nombre se ajusta y NO se trunca: salta de línea si hace falta */
@@ -605,7 +605,7 @@ button.xs { padding: 0.3em 0.7em; font-size: 0.72rem; white-space: nowrap; }
 .seat-name.clickable { cursor: pointer; }
 .seat-name.clickable:hover { color: var(--color-primary); text-decoration: underline; text-decoration-style: dotted; }
 .you { color: var(--color-primary); font-weight: 400; }
-.data-badge { flex: 0 0 auto; width: 16px; height: 16px; border-radius: 50%; background: var(--color-primary); color: #1a1408; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.data-badge { flex: 0 0 auto; width: 16px; height: 16px; border-radius: 50%; background: var(--color-primary); color: var(--dt-accent-ink); font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
 /* conteo compacto uniforme (un dorso + ×N) en TODOS los asientos */
 .seat-cards { display: flex; align-items: center; justify-content: center; gap: 5px; max-width: 100%; }
 .hand-count { display: inline-flex; align-items: center; gap: 3px; font-size: 0.8rem; font-weight: 600; color: var(--color-text-secondary); }
@@ -615,7 +615,7 @@ button.xs { padding: 0.3em 0.7em; font-size: 0.72rem; white-space: nowrap; }
 .seat-exposed :deep(.pcard.mini) { --cw: 26px; outline: 2px solid var(--color-warning); }
 /* en mi mano: marca de expuesta y la que debo jugar ya */
 .hand :deep(.pcard.committed) { outline: 2px solid var(--color-warning); }
-.hand :deep(.pcard.forced) { outline: 3px solid var(--color-primary); box-shadow: 0 0 14px rgba(205,163,80,.7); }
+.hand :deep(.pcard.forced) { outline: 3px solid var(--color-primary); box-shadow: 0 0 14px color-mix(in srgb, var(--dt-accent) 70%, transparent); }
 .seat-empty { color: var(--color-text-tertiary); font-size: 0.82rem; font-style: italic; }
 .ready-tag { color: var(--color-success); font-size: 0.78rem; font-weight: 600; }
 .muted { color: var(--color-text-tertiary); font-size: 0.8rem; }
@@ -659,7 +659,7 @@ button.link.clear { color: var(--color-text-secondary); }
 
 .fault-toast {
   position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  z-index: 1200; background: var(--color-error); color: #fff;
+  z-index: 1200; background: var(--color-error); color: var(--dt-surface);
   padding: 18px 30px; border-radius: 14px; font-family: var(--font-headline);
   font-weight: 700; font-size: 1.5rem; text-align: center; box-shadow: var(--shadow-lg);
 }
@@ -680,13 +680,13 @@ button.link.clear { color: var(--color-text-secondary); }
      final lo hace la transición de salida de Vue al quitar el overlay. */
   animation: cine-float 1.9s ease-in-out forwards;
 }
-.cine-box :deep(.cine-result) { --cw: 82px; outline: 3px solid var(--color-primary); box-shadow: 0 0 22px rgba(205,163,80,.7); }
+.cine-box :deep(.cine-result) { --cw: 82px; outline: 3px solid var(--color-primary); box-shadow: 0 0 22px color-mix(in srgb, var(--dt-accent) 70%, transparent); }
 .cine-taken { display: flex; gap: 8px; --cw: 62px; flex-wrap: wrap; justify-content: center; max-width: 92vw; }
 /* revelación del corte */
 .data-picks { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 .data-pick { display: flex; flex-direction: column; align-items: center; gap: 6px; opacity: .7; }
 .data-pick.won { opacity: 1; }
-.data-pick.won :deep(.pcard) { outline: 3px solid var(--color-primary); box-shadow: 0 0 18px rgba(205,163,80,.7); }
+.data-pick.won :deep(.pcard) { outline: 3px solid var(--color-primary); box-shadow: 0 0 18px color-mix(in srgb, var(--dt-accent) 70%, transparent); }
 .data-name { font-size: 0.8rem; color: var(--color-text); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .data-msg { margin-top: 12px; text-align: center; font-family: var(--font-headline); font-weight: 700; color: var(--color-primary); }
 /* conteo del cartón */
@@ -709,9 +709,9 @@ button.link.clear { color: var(--color-text-secondary); }
 .controls { display: flex; gap: 8px; justify-content: center; }
 
 .toasts { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 6px; z-index: 900; pointer-events: none; }
-.toast { background: var(--color-primary); color: #1a1408; padding: 8px 16px; border-radius: 999px; font-weight: 700; box-shadow: var(--shadow-md); animation: pop .3s ease; }
-.toast.chica { background: var(--color-secondary); color: #0f1408; }
-.toast.carton { background: var(--color-info); color: #fff; }
+.toast { background: var(--color-primary); color: var(--dt-accent-ink); padding: 8px 16px; border-radius: 999px; font-weight: 700; box-shadow: var(--shadow-md); animation: pop .3s ease; }
+.toast.chica { background: var(--color-secondary); color: var(--dt-accent-ink); }
+.toast.carton { background: var(--color-info); color: var(--dt-accent-ink); }
 @keyframes pop { from { transform: scale(.7); opacity: 0; } }
 
 .lay-enter-active { transition: all .2s ease; }

@@ -125,7 +125,7 @@ function joinId (id, hostPubkey = null) {
 .opt-label { font-size: 0.85rem; color: var(--color-text-secondary); min-width: 96px; }
 .vis-toggle { display: flex; gap: 8px; flex: 1; }
 .vis-toggle button { flex: 1; }
-.vis-toggle button.active { background: var(--color-primary); color: #1a1408; border-color: transparent; }
+.vis-toggle button.active { background: var(--color-primary); color: var(--dt-accent-ink); border-color: transparent; }
 .big { font-size: 1.05rem; padding: 0.8em; }
 .join { display: flex; gap: 8px; }
 .join input { flex: 1; }
