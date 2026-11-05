@@ -6,8 +6,14 @@
 // aparecen la primera vez que entras a una mesa real.
 import { createTutorial } from '@dotrino/tutorial'
 
+/** @type {import('@dotrino/tutorial').DotrinoTutorial | null} */
 let instance = null
 
+/**
+ * Arranca el tutorial una sola vez (las siguientes llamadas devuelven el mismo).
+ * @param {{ lang: () => string, inRoom: () => boolean, hasSeat: () => boolean }} ctx
+ * @returns {import('@dotrino/tutorial').DotrinoTutorial}
+ */
 export function startAppTutorial (ctx) {
   if (instance) return instance
   instance = createTutorial({

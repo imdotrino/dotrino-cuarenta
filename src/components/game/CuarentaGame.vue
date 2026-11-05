@@ -22,7 +22,7 @@
     <!-- Corte por la data: cada quien elige una carta; la más alta reparte -->
     <div v-if="drawPhase" class="draw">
       <h3 class="draw-title">{{ t.drawTitle }}</h3>
-      <p class="draw-sub">{{ myDrawPick ? t.drawWaiting(drawInfo.picked, drawInfo.players) : (mySeat ? t.drawPick : t.spectating) }}<span v-if="onClock" class="clock" :class="{ low: secsLeft <= 10 }"> · {{ secsLeft }}s</span></p>
+      <p class="draw-sub">{{ myDrawPick ? t.drawWaiting(drawInfo?.picked ?? 0, drawInfo?.players ?? 0) : (mySeat ? t.drawPick : t.spectating) }}<span v-if="onClock" class="clock" :class="{ low: secsLeft <= 10 }"> · {{ secsLeft }}s</span></p>
       <div class="draw-grid" data-testid="draw-grid">
         <PlayingCard
           v-for="i in drawTotal" :key="i - 1"
@@ -66,9 +66,9 @@
           <div class="seat-head">
             <span
               class="seat-name" :class="{ clickable: isPeer(s.id) }"
-              :role="isPeer(s.id) ? 'button' : null" @click="onName(s.id)"
-              :title="isPeer(s.id) ? t.reputation : null"
-            >{{ seatOf(s.id).name || t.noName }}<span v-if="s.id === mySeat" class="you"> ({{ t.you }})</span></span>
+              :role="isPeer(s.id) ? 'button' : undefined" @click="onName(s.id)"
+              :title="isPeer(s.id) ? t.reputation : undefined"
+            >{{ seatOf(s.id)?.name || t.noName }}<span v-if="s.id === mySeat" class="you"> ({{ t.you }})</span></span>
           </div>
           <!-- Conteo compacto uniforme en todos los asientos (mismo tamaño); la D
                de la data va aquí para dejarle todo el espacio al nombre. -->
@@ -80,7 +80,7 @@
           <div class="seat-exposed" v-if="playing && committedOf(s.id).length" :title="t.exposedHint">
             <PlayingCard v-for="c in committedOf(s.id)" :key="c.id" :card="c" mini />
           </div>
-          <div class="seat-status" v-if="seatOf(s.id).status === 'disconnected'">
+          <div class="seat-status" v-if="seatOf(s.id)?.status === 'disconnected'">
             <span class="muted">⏸</span>
           </div>
           <div class="seat-actions" v-if="s.id === mySeat && !playing">
@@ -244,6 +244,10 @@ import '@dotrino/share'
 
 const emit = defineEmits(['leave', 'rate'])
 
+/** @typedef {import('@/types').Card} Card */
+/** @typedef {import('@/types').GameEvent} GameEvent */
+/** @typedef {import('@/types').SeatId} SeatId */
+
 const {
   STATUS, game, status, result, seats, seatIds, tableSize, mySeat, myPubkey, roomId,
   isMyTurn, occupiedCount,
@@ -271,8 +275,11 @@ const drawPhase = computed(() => playing.value && game.value?.phase === 'draw')
 const drawInfo = computed(() => game.value?.draw || null)
 const drawTotal = computed(() => drawInfo.value?.total || 40)
 const myDrawPick = computed(() => drawInfo.value?.myPick || null)
+/** @param {number} i */
 function isTaken (i) { return (drawInfo.value?.takenIndexes || []).includes(i) }
+/** @param {number} i */
 function canCut (i) { return drawPhase.value && !!mySeat.value && !myDrawPick.value && !isTaken(i) }
+/** @param {number} i */
 function onCut (i) { if (canCut(i)) cut(i) }
 
 const claimOpen = computed(() => playing.value && game.value?.phase === 'claim')
@@ -286,6 +293,7 @@ const robOpen = computed(() => (claimOpen.value || carryOpen.value) && !!mySeat.
 // resign (abandono = pierde). Los bots actúan en segundos, así que no aplica.
 const TURN_SECONDS = 60
 const secsLeft = ref(TURN_SECONDS)
+/** @type {ReturnType<typeof setInterval> | null} */
 let turnTimer = null
 // Clave del "estoy en el reloj": cambia al entrar/salir de mi acción obligatoria
 // (cortar en 'draw', o jugar en 'play' cuando es mi turno).
@@ -304,7 +312,8 @@ watch(onClockKey, (key) => {
   turnTimer = setInterval(() => {
     secsLeft.value -= 1
     if (secsLeft.value <= 0) {
-      clearInterval(turnTimer); turnTimer = null
+      if (turnTimer) clearInterval(turnTimer)
+      turnTimer = null
       if (onClockKey.value) resign() // se acabó el tiempo → abandono
     }
   }, 1000)
@@ -312,28 +321,39 @@ watch(onClockKey, (key) => {
 onBeforeUnmount(() => { if (turnTimer) clearInterval(turnTimer) })
 
 // ── selección manual de cartas de la mesa ───────────────────────────
-const selected = reactive(new Set())
+const selected = reactive(/** @type {Set<string>} */ (new Set()))
+/** @param {Card} c */
 function canSelectTable (c) {
   if (!playing.value || !mySeat.value) return false
   if (claimOpen.value) return c.id !== game.value?.claimCardId // no se elige la carta tirada
   if (carryOpen.value || isMyTurn.value) return true // robar continuación o capturar en mi turno
   return false
 }
+/** @param {Card} c */
 function toggleSelect (c) {
   if (!canSelectTable(c)) return
   if (selected.has(c.id)) selected.delete(c.id); else selected.add(c.id)
 }
 // Cartas expuestas (tiradas fuera de turno): visibles para todos y de juego
 // obligatorio en orden. committedOf(id) = cola del asiento.
-function committedOf (id) { return game.value?.committed?.[id] || [] }
+/**
+ * @param {SeatId | null | undefined} id
+ * @returns {Card[]}
+ */
+function committedOf (id) {
+  if (id == null) return []
+  return game.value?.committed?.[id] || []
+}
 const myCommitted = computed(() => committedOf(mySeat.value))
 // En mi turno, si tengo expuestas, sólo puedo jugar la PRIMERA.
 const forcedCardId = computed(() => (isMyTurn.value && myCommitted.value.length) ? myCommitted.value[0].id : null)
+/** @param {Card} c */
 function handClickable (c) {
   if (!mySeat.value || claimOpen.value) return false
   if (forcedCardId.value) return c.id === forcedCardId.value
   return true // en mi turno (sin expuestas) o fuera de turno (para exponer)
 }
+/** @param {Card} card */
 function onThrow (card) {
   // Estando sentado se puede tirar aunque no sea tu turno: fuera de turno la carta
   // queda EXPUESTA (no se mandan capturas) y se jugará obligatoriamente en tu turno.
@@ -352,9 +372,10 @@ function onRob () {
 watch(() => [game.value?.turn, game.value?.phase, game.value?.table?.length], () => selected.clear())
 
 // ── tamaño adaptativo de las cartas en la mesa (que siempre entren al fieltro) ──
-const feltRef = ref(null)
+const feltRef = ref(/** @type {HTMLElement | null} */ (null))
 const feltW = ref(300)
 const feltH = ref(150)
+/** @type {ResizeObserver | null} */
 let ro = null
 function measureFelt () { const el = feltRef.value; if (el) { feltW.value = el.clientWidth; feltH.value = el.clientHeight } }
 watch(feltRef, (el) => {
@@ -380,9 +401,15 @@ const tableCardCw = computed(() => {
   return 22
 })
 
-const seatOf = (id) => seats.value?.[id] || null
+/**
+ * @param {SeatId | null | undefined} id
+ * @returns {import('@dotrino/lobby').SeatView | null}
+ */
+const seatOf = (id) => (id != null && seats.value?.[id]) || null
 // ¿El asiento es de OTRO jugador (con identidad)? Click en su nombre → su perfil.
+/** @param {SeatId} id */
 function isPeer (id) { const s = seatOf(id); return !!(s?.pubkey && s.pubkey !== myPubkey.value) }
+/** @param {SeatId} id */
 function onName (id) { if (isPeer(id)) emit('rate', seatOf(id)) }
 
 // En espera se muestran los 4 asientos (para sentarse); ya en juego, sólo los que
@@ -395,6 +422,7 @@ const visibleSeats = computed(() => {
 // Posiciones alrededor de la mesa, en sentido horario, con MI asiento siempre
 // abajo. En 4 jugadores: yo abajo, rival a la derecha, compañero enfrente, rival
 // a la izquierda (asientos alternados = compañero al frente).
+/** @type {Record<number, string[]>} */
 const POS_LAYOUT = { 1: ['bottom'], 2: ['bottom', 'top'], 4: ['bottom', 'right', 'top', 'left'] }
 const tableSeats = computed(() => {
   const ids = visibleSeats.value
@@ -406,19 +434,27 @@ const tableSeats = computed(() => {
 })
 
 // Equipos (autoritativos durante el juego; antes, por paridad de asiento).
+/**
+ * @param {number} ti
+ * @returns {SeatId[]}
+ */
 function teamMembers (ti) {
   const teams = game.value?.teams
   if (teams && teams[ti]) return teams[ti]
   return seatIds.value.filter(id => seatIds.value.indexOf(id) % 2 === ti)
 }
+/** @param {number | null | undefined} ti */
 function teamLabel (ti) {
   if (ti == null) return ''
   const names = teamMembers(ti).map(id => seatOf(id)?.name).filter(Boolean)
   if (names.length) return names.join(' + ')
   return ti === 0 ? t.value.teamA : t.value.teamB
 }
+/** @param {number} ti */
 const teamScore = (ti) => game.value?.scores?.[ti] ?? 0
+/** @param {number} ti */
 const teamChicas = (ti) => game.value?.chicasWon?.[ti] ?? 0
+/** @param {number} ti */
 const teamCards = (ti) => game.value?.capturedCount?.[ti] ?? 0
 const leadTeam = computed(() => {
   const s = game.value?.scores
@@ -448,8 +484,9 @@ const ratablePlayers = computed(() => [...seenPlayers.values()])
 function doResign () { confirmResign.value = false; resign() }
 
 // ── toasts de eventos de puntos ─────────────────────────────────────
-const toasts = ref([])
+const toasts = ref(/** @type {Array<{ id: number, text: string, kind: GameEvent['type'] }>} */ ([]))
 let toastSeq = 0
+/** @type {Partial<Record<GameEvent['type'], (e: GameEvent) => string>>} */
 const EV_TEXT = {
   caida: () => t.value.evCaida,
   limpia: () => t.value.evLimpia,
@@ -459,18 +496,22 @@ const EV_TEXT = {
   chica: () => t.value.evChica
 }
 const faultMsg = ref('')
+/** @type {ReturnType<typeof setTimeout> | null} */
 let faultTimer = null
 // Revelación del corte por la data.
-const dataReveal = ref(null)
+const dataReveal = ref(/** @type {{ dealer: SeatId | null, picks: Array<{ seat: SeatId, card: Card }> } | null} */ (null))
+/** @type {ReturnType<typeof setTimeout> | null} */
 let dataTimer = null
 // Cinemática del levante (carta ejecutora + cartas que se lleva).
-const captureCine = ref(null)
+const captureCine = ref(/** @type {{ result: Card, cards: Card[] } | null} */ (null))
+/** @type {ReturnType<typeof setTimeout> | null} */
 let cineTimer = null
-const CAPTURE_TYPES = ['levante', 'caida', 'limpia', 'caidaLimpia']
 // Cinemática de conteo del cartón al final de cada mano (~5 s).
-const countCine = ref(null)
+const countCine = ref(/** @type {{ counts: number[], points: number[], shown: number[], done: boolean } | null} */ (null))
+/** @type {Array<ReturnType<typeof setTimeout>>} */
 let countTimers = []
 function clearCount () { countTimers.forEach(clearInterval); countTimers = [] }
+/** @param {Extract<GameEvent, { type: 'count' }>} e */
 function startCount (e) {
   clearCount()
   const counts = e.counts || [0, 0]
@@ -509,7 +550,7 @@ watch(() => game.value?.lastEvents, (evs) => {
       faultTimer = setTimeout(() => { faultMsg.value = '' }, 3200)
       continue
     }
-    if (CAPTURE_TYPES.includes(e.type) && e.result) {
+    if ((e.type === 'levante' || e.type === 'caida' || e.type === 'limpia' || e.type === 'caidaLimpia') && e.result) {
       captureCine.value = { result: e.result, cards: e.cards || [] }
       if (cineTimer) clearTimeout(cineTimer)
       cineTimer = setTimeout(() => { captureCine.value = null }, 1900)

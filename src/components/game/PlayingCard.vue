@@ -3,8 +3,8 @@
     class="pcard"
     :class="{ red: isRed, down: faceDown, clickable, sel: selected, mini }"
     :data-card="faceDown ? 'down' : card?.id"
-    :role="clickable ? 'button' : null"
-    :tabindex="clickable ? 0 : null"
+    :role="clickable ? 'button' : undefined"
+    :tabindex="clickable ? 0 : undefined"
     :aria-label="faceDown ? 'carta oculta' : label"
     @click="clickable && $emit('play', card)"
     @keydown.enter.prevent="clickable && $emit('play', card)"
@@ -23,7 +23,7 @@ import { computed } from 'vue'
 import { SUIT_SYMBOL, SUIT_RED } from '@/game/cuarentaRules'
 
 const props = defineProps({
-  card: { type: Object, default: null },
+  card: { type: /** @type {import('vue').PropType<import('@/types').Card | null>} */ (Object), default: null },
   faceDown: { type: Boolean, default: false },
   clickable: { type: Boolean, default: false },
   selected: { type: Boolean, default: false },

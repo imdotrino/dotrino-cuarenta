@@ -5,7 +5,7 @@
  *
  * Endorsements signed by strangers (not in trustMap) are ignored.
  *
- * @param {Object} peer Peer record from the vault
+ * @param {import('@dotrino/identity').PeerInfo | null | undefined} peer Peer record from the vault
  * @param {Map<string, number>} trustMap Map<pubkey, my rating 0-5>
  * @returns {{value: number|null, source: 'mine'|'derived'|null, count: number}}
  */

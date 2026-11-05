@@ -12,9 +12,12 @@ export const useConnectionStore = defineStore('connection', {
     peerIdentities: () => L.peerIdentities.value
   },
   actions: {
+    /** @param {Parameters<typeof L.setMyNickname>} a */
     setMyNickname (...a) { return L.setMyNickname(...a) },
     refreshIdentity () { return L.refreshIdentity() },
+    /** @param {Parameters<typeof L.ratePeer>} a */
     ratePeer (...a) { return L.ratePeer(...a) },
+    /** @param {Parameters<typeof L.setPeerNickname>} a */
     setPeerNickname (...a) { return L.setPeerNickname(...a) },
     getReputation () { return L.getReputation() }
   }

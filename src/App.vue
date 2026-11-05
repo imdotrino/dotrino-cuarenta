@@ -96,19 +96,20 @@ import icon from './assets/icon.svg'
 
 const settingsOpen = ref(false)
 const rulesOpen = ref(false)
-const ratingTarget = ref(null)
+const ratingTarget = ref(/** @type {import('./types').RatingTarget | null} */ (null))
 
 // ── Topbar estándar ────────────────────────────────────────────────
 // Le pasamos los pilares que la app YA maneja (una sola conexión al vault, la
 // del lobby) para que derive el avatar del perfil activo (§6.1). shallowRef: la
 // identidad es una instancia con estado propio, no debe envolverse en un proxy
 // reactivo profundo.
-const topbarRef = ref(null)
-const identityInst = shallowRef(null)
-const reputationInst = shallowRef(null)
+const topbarRef = ref(/** @type {import('@dotrino/topbar').DotrinoTopbar | null} */ (null))
+const identityInst = shallowRef(/** @type {import('@dotrino/identity').Identity | null} */ (null))
+const reputationInst = shallowRef(/** @type {import('@dotrino/reputation').VaultReputation | null} */ (null))
 
 // El idioma lo persiste el topbar en la clave común del ecosistema
 // ('dotrino.lang'); acá solo reflejamos su evento en el i18n de la app.
+/** @param {CustomEvent<{ lang: 'es' | 'en' }>} e */
 function onLang (e) { setLang(e?.detail?.lang) }
 
 // Volver unificado: el botón físico / chevron cierra el modal abierto antes de
@@ -121,7 +122,7 @@ useBackLayer(ratingTarget, { onClose: () => { ratingTarget.value = null } })
 // así los modales se cierran primero y el último volver deja la mesa.
 useBackLayer(L.inRoom, { onClose: () => onLeave() })
 const nickDraft = ref(L.myNickname.value || '')
-const nickInput = ref(null)
+const nickInput = ref(/** @type {HTMLInputElement | null} */ (null))
 
 // PWA: el botón Instalar lo aporta el Web Component <dotrino-install>
 // (paquete del ecosistema): captura temprana de beforeinstallprompt, rama iOS
@@ -134,10 +135,11 @@ watch(() => L.nickModalOpen.value, (open) => {
 function submitNick () { L.submitNick(nickDraft.value) }
 function onLeave () { L.leaveTable() }
 
+/** @param {import('@dotrino/lobby').SeatView} seat el asiento del jugador a calificar */
 function openRating (seat) {
-  const id = L.peerIdentities.value.get(seat.pubkey)
+  const id = seat.pubkey ? L.peerIdentities.value.get(seat.pubkey) : undefined
   ratingTarget.value = {
-    token: seat.pubkey?.slice ? seat.pubkey : String(seat.pubkey),
+    token: typeof seat.pubkey?.slice === 'function' ? seat.pubkey : String(seat.pubkey),
     pubkey: seat.pubkey,
     peer: id?.peer || null,
     nickname: seat.name || id?.announcedNickname || null
@@ -149,20 +151,23 @@ function openRating (seat) {
 // modal propio del topbar no contempla indicadores. El evento es cancelable
 // justamente para esto: lo prevenimos y abrimos el nuestro (mismo Web Component
 // compartido <dotrino-profile>, no una tarjeta casera).
+/** @param {Event} e */
 function onProfileClick (e) {
   e.preventDefault()
   openMyProfile()
 }
 
-const myProfilePk = ref(null)
+const myProfilePk = ref(/** @type {string | null} */ (null))
 async function openMyProfile () {
   await L.refreshIdentity()
   const pk = L.myPubkey.value
   if (pk) myProfilePk.value = pk
 }
+/** @param {Element | import('vue').ComponentPublicInstance | null} el */
 function bindMyProfile (el) {
-  if (!el) return
-  L.getProfileProvider().then((p) => { if (p) el.provider = p })
+  if (!(el instanceof HTMLElement)) return
+  const profile = /** @type {import('@dotrino/profile').DotrinoProfile} */ (el)
+  L.getProfileProvider().then((p) => { if (p) profile.provider = p })
 }
 useBackLayer(myProfilePk, { onClose: () => { myProfilePk.value = null } })
 // Cablea los pilares al topbar en cuanto existan (el avatar del perfil activo y,
@@ -217,13 +222,19 @@ onMounted(() => {
   window.__cuarenta = {
     L,
     async createTable (vis = 'public', size = 2) { return L.createTable(vis, size) },
+    /** @param {string} token @param {string | null} [hostPubkey] */
     async joinTable (token, hostPubkey = null) { return L.joinTable(token, hostPubkey) },
     myToken () { return L.myToken.value },
+    /** @param {string} id */
     takeSeat (id) { return L.takeSeat(id) },
+    /** @param {boolean} b */
     setReady (b) { return L.setReady(b) },
     start () { return L.startGame() },
+    /** @param {number} index */
     cut (index) { return L.cut(index) },
+    /** @param {string} cardId @param {string[]} [captured] */
     play (cardId, captured = []) { return L.playCard(cardId, captured) },
+    /** @param {string[]} [captured] @param {{ claimCardId?: string | null, carryValue?: number | null }} [ctx] */
     rob (captured = [], ctx = {}) { return L.rob(captured, ctx) },
     state () { return L.snapshot.value },
     game () { return L.game.value }

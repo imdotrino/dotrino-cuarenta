@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node test/engine.test.mjs",
-    "type-check": "tsc --noEmit"
+    "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
     "@dotrino/identity": "0.117.2",
@@ -30,6 +30,7 @@
     "@dotrino/prerender": "0.1.0",
     "@vitejs/plugin-vue": "6.0.2",
     "typescript": "5.9.3",
-    "vite": "7.3.1"
+    "vite": "7.3.1",
+    "vue-tsc": "3.3.13"
   }
 }

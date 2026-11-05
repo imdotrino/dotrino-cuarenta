@@ -75,6 +75,7 @@ const filteredRooms = computed(() => openOnly.value ? rooms.value.filter(r => r.
 
 // Nombres de los jugadores ya sentados en una mesa (para verlos en la lista
 // pública: si no, una mesa sin nombre se ve como "Table" anónima).
+/** @param {import('@/types').RoomListing} r */
 function seatedNames (r) {
   return (r.seats || [])
     .filter(s => s.status === 'occupied' && s.name)
@@ -82,6 +83,7 @@ function seatedNames (r) {
     .join(' · ')
 }
 
+/** @type {ReturnType<typeof setInterval> | null} */
 let timer = null
 onMounted(async () => {
   await L.connect()
@@ -90,6 +92,7 @@ onMounted(async () => {
 })
 onUnmounted(() => { if (timer) clearInterval(timer) })
 
+/** @param {() => unknown} fn */
 function withNick (fn) { L.requireNick(fn) }
 
 function create () {
@@ -106,6 +109,10 @@ function join () {
   joinId(id)
 }
 // La pubkey del host viene en el resumen de la mesa: con ella el saludo ya sale sellado.
+/**
+ * @param {string} id
+ * @param {string | null} [hostPubkey]
+ */
 function joinId (id, hostPubkey = null) {
   withNick(async () => {
     busy.value = true; error.value = ''

@@ -15,30 +15,62 @@ import {
   SUITS, TARGET, NO_CARTON_FROM, FAULT_POINTS
 } from './cuarentaRules.js'
 
+/** @typedef {import('../types').Card} Card */
+/** @typedef {import('../types').SeatId} SeatId */
+/** @typedef {import('../types').Team} Team */
+/** @typedef {import('../types').GameState} GameState */
+/** @typedef {import('../types').GameAction} GameAction */
+/** @typedef {import('../types').GameView} GameView */
+/** @typedef {import('../types').LastPlay} LastPlay */
+/** @typedef {() => number} Rng */
+
 // Valor de una carta para el CORTE inicial (elegir la data): gana la más alta por
 // número (seq) y, a igualdad, por palo ♦ > ♥ > ♠ > ♣ (orden de SUITS).
+/** @param {Card} card */
 function cutValue (card) { return card.seq * 10 + (4 - SUITS.indexOf(card.s)) }
 
 // Config que el host deja lista antes de arrancar (host-only, mismo contexto JS).
+/** @type {{ activeSeats: SeatId[] } | null} */
 let _pendingConfig = null
+/**
+ * El host la fija justo antes de `room.start()`: qué asientos juegan.
+ * @param {{ activeSeats: SeatId[] } | null} cfg
+ */
 export function setPendingConfig (cfg) { _pendingConfig = cfg }
 
+/**
+ * Copia profunda del estado (es JSON puro).
+ * @template T
+ * @param {T} x
+ * @returns {T}
+ */
 const clone = (x) => JSON.parse(JSON.stringify(x))
 
 // Suma puntos respetando la regla del «38 que no juega»: una pareja con 38 ó 39
 // SÓLO suma por CAÍDA; ningún otro puntaje (limpia, ronda, cartón) le sirve para
 // llegar a 40. (El cartón además ya está bloqueado desde 30 por NO_CARTON_FROM.)
+/**
+ * @param {GameState} s
+ * @param {Team} team
+ * @param {number} pts
+ * @param {boolean} isCaida
+ */
 function addPoints (s, team, pts, isCaida) {
   if (pts <= 0) return
   if (!isCaida && s.scores[team] >= 38) return
   s.scores[team] += pts
 }
 
+/**
+ * @param {SeatId[]} activeSeats
+ * @returns {{ teams: SeatId[][], teamOf: Record<SeatId, Team> }}
+ */
 function buildTeams (activeSeats) {
   const n = activeSeats.length
   const teams = n === 2
     ? [[activeSeats[0]], [activeSeats[1]]]
     : [[activeSeats[0], activeSeats[2]], [activeSeats[1], activeSeats[3]]]
+  /** @type {Record<SeatId, Team>} */
   const teamOf = {}
   teams.forEach((arr, i) => arr.forEach(id => { teamOf[id] = i }))
   return { teams, teamOf }
@@ -46,6 +78,11 @@ function buildTeams (activeSeats) {
 
 // Reparte 5 cartas a cada asiento activo y aplica ronda. Si setTurn, fija el turno
 // al jugador a la derecha de la data (repartidor).
+/**
+ * @param {GameState} s
+ * @param {Rng} rng
+ * @param {boolean} setTurn
+ */
 function dealRound (s, rng, setTurn) {
   for (const id of s.activeSeats) {
     // Cada reparto entrega una mano nueva de 5 (las manos siempre se reparten
@@ -71,13 +108,17 @@ function dealRound (s, rng, setTurn) {
   s.lastPlay = null
   if (setTurn) {
     const n = s.activeSeats.length
-    s.turn = s.activeSeats[(s.dealerIdx + 1) % n]
+    s.turn = s.activeSeats[((s.dealerIdx ?? 0) + 1) % n]
   }
 }
 
+/**
+ * @param {GameState} s
+ * @param {Rng} rng
+ */
 function reshuffleAndDeal (s, rng) {
   s.deck = shuffle(makeDeck(), rng)
-  s.dealerIdx = (s.dealerIdx + 1) % s.activeSeats.length
+  s.dealerIdx = ((s.dealerIdx ?? 0) + 1) % s.activeSeats.length
   s.capturedCount = [0, 0]
   s.table = []
   s.lastPlay = null
@@ -89,6 +130,11 @@ function reshuffleAndDeal (s, rng) {
   dealRound(s, rng, true)
 }
 
+/**
+ * @param {GameState} s
+ * @param {Team} team
+ * @param {Rng} rng
+ */
 function endChica (s, team, rng) {
   s.chicasWon[team]++
   s.lastEvents.push({ type: 'chica', team })
@@ -105,6 +151,11 @@ function endChica (s, team, rng) {
 
 // Resuelve victorias INSTANTÁNEAS de chica (s._winChica): 4 iguales (doble ronda)
 // o 4 caídas seguidas. Un reparto de nueva chica puede gatillar otra → bucle.
+/**
+ * @param {GameState} s
+ * @param {Rng} rng
+ * @returns {GameState}
+ */
 function settle (s, rng) {
   let guard = 0
   while (!s.finished && s._winChica != null && guard++ < 30) {
@@ -118,6 +169,10 @@ function settle (s, rng) {
 
 // Tras agotarse las manos: o se reparte otra vuelta, o (baraja vacía) se cuenta el
 // cartón, se cierra la "data" y se sigue/termina la chica.
+/**
+ * @param {GameState} s
+ * @param {Rng} rng
+ */
 function refill (s, rng) {
   const allEmpty = s.activeSeats.every(id => s.hands[id].length === 0)
   if (!allEmpty) return
@@ -146,15 +201,26 @@ function refill (s, rng) {
   reshuffleAndDeal(s, rng)
 }
 
+/**
+ * @param {GameState} s
+ * @param {SeatId | null} seat
+ * @returns {SeatId}
+ */
 function nextSeat (s, seat) {
-  const i = s.activeSeats.indexOf(seat)
+  // Si `seat` no está (no debería), indexOf da -1 y el turno pasa al primero.
+  const i = seat == null ? -1 : s.activeSeats.indexOf(seat)
   return s.activeSeats[(i + 1) % s.activeSeats.length]
 }
 
+/**
+ * @param {Rng} rng
+ * @returns {GameState}
+ */
 function makeInitialState (rng) {
   const cfg = _pendingConfig || { activeSeats: ['p1', 'p2'] }
   const activeSeats = cfg.activeSeats.slice()
   const { teams, teamOf } = buildTeams(activeSeats)
+  /** @type {GameState} */
   const s = {
     activeSeats,
     teams,
@@ -194,6 +260,10 @@ function makeInitialState (rng) {
 }
 
 // Reparte tras el corte: baraja fresca, manos de 5, turno a la derecha de la data.
+/**
+ * @param {GameState} s
+ * @param {Rng} rng
+ */
 function dealFromCut (s, rng) {
   s.deck = shuffle(makeDeck(), rng)
   s.table = []; s.lastPlay = null; s.lastCapturer = null; s.capturedCount = [0, 0]
@@ -205,6 +275,16 @@ function dealFromCut (s, rng) {
 // Aplica una captura al equipo `team`: saca de la mesa las cartas capturadas (y la
 // carta resultado), suma al cartón, y otorga caída/limpia. `resultOnTable` indica
 // si la carta resultado ya estaba en la mesa (caso robar).
+/**
+ * @param {GameState} s
+ * @param {Team} team
+ * @param {SeatId} seat
+ * @param {Card} resultCard
+ * @param {Card[]} capturedCards
+ * @param {LastPlay | null} prevLast
+ * @param {boolean} allowCaida
+ * @param {boolean} resultOnTable
+ */
 function applyCapture (s, team, seat, resultCard, capturedCards, prevLast, allowCaida, resultOnTable) {
   const capIds = new Set(capturedCards.map(c => c.id))
   s.table = s.table.filter(c => !capIds.has(c.id) && !(resultOnTable && c.id === resultCard.id))
@@ -244,6 +324,11 @@ function applyCapture (s, team, seat, resultCard, capturedCards, prevLast, allow
 // Tras un levante, ¿quedó la escalera consecutiva «colgando»? Si en la mesa hay
 // una carta del valor siguiente al tope capturado, se abre carry (robable). Se
 // llama DESPUÉS de refill (para que la carta siga en mesa).
+/**
+ * @param {GameState} s
+ * @param {number} baseSeq
+ * @param {Card[]} capturedCards
+ */
 function setCarry (s, baseSeq, capturedCards) {
   const top = runTop(capturedCards, baseSeq)
   const cont = top + 1
@@ -252,6 +337,11 @@ function setCarry (s, baseSeq, capturedCards) {
 
 // Error fatal ("pasa la mano con 10"): +10 al equipo contrario, se rebaraja todo y
 // se reparte de nuevo; el puntaje de la chica se conserva.
+/**
+ * @param {GameState} s
+ * @param {Team} faultTeam
+ * @param {Rng} rng
+ */
 function applyFault (s, faultTeam, rng) {
   const other = faultTeam === 0 ? 1 : 0
   s.scores[other] += FAULT_POINTS
@@ -265,8 +355,15 @@ function applyFault (s, faultTeam, rng) {
   reshuffleAndDeal(s, rng)
 }
 
+/**
+ * El motor para `createLobby({ engine })`.
+ * @returns {import('@dotrino/lobby').EngineSpec<GameState, GameAction> & {
+ *   view: (state: GameState, seat: SeatId | null) => GameView,
+ *   isOver: (state: GameState) => { winner: string, reason: string } | null }}
+ */
 export function makeCuarentaEngine () {
   return {
+    /** @param {Rng} rng */
     initialState: (rng) => makeInitialState(rng),
 
     // ctx = { seat, seats, rng, now }. seat ∈ activeSeats.
@@ -288,7 +385,8 @@ export function makeCuarentaEngine () {
         s.lastEvents = []
         s.picks[seat] = { index: i, card: s.drawPile[i] }
         if (s.activeSeats.every(id => s.picks[id])) {
-          let best = null, bestVal = -1
+          // cutValue es siempre ≥ 10: el primer asiento ya mejora el -1 inicial.
+          let best = s.activeSeats[0], bestVal = -1
           for (const id of s.activeSeats) {
             const v = cutValue(s.picks[id].card)
             if (v > bestVal) { bestVal = v; best = id }
@@ -329,8 +427,9 @@ export function makeCuarentaEngine () {
           const resultCard = s.table.find(c => c.id === state.claimCardId)
           if (!resultCard) throw new Error('no-claim-card')
           const pool = s.table.filter(c => c.id !== resultCard.id)
-          const selected = selIds.map(id => pool.find(c => c.id === id))
-          const okSel = selected.length > 0 && selected.every(Boolean) &&
+          const found = selIds.map(id => pool.find(c => c.id === id))
+          const selected = /** @type {Card[]} */ (found.filter(c => c != null))
+          const okSel = selected.length > 0 && selected.length === found.length &&
             new Set(selIds).size === selIds.length && isValidCapture(resultCard, selected)
           if (!okSel) { applyFault(s, team, ctx.rng); return s }
           applyCapture(s, team, ctx.seat, resultCard, selected, null, false, true)
@@ -350,8 +449,9 @@ export function makeCuarentaEngine () {
             throw new Error('stale-rob')
           }
           const base = state.carry.value
-          const selected = selIds.map(id => s.table.find(c => c.id === id))
-          const okSel = selected.length > 0 && selected.every(Boolean) &&
+          const found = selIds.map(id => s.table.find(c => c.id === id))
+          const selected = /** @type {Card[]} */ (found.filter(c => c != null))
+          const okSel = selected.length > 0 && selected.length === found.length &&
             new Set(selIds).size === selIds.length && isRunFrom(selected, base)
           if (!okSel) { applyFault(s, team, ctx.rng); return s }
           const capIds = new Set(selected.map(c => c.id))
@@ -403,8 +503,9 @@ export function makeCuarentaEngine () {
 
       if (selIds.length) {
         // el jugador seleccionó una combinación: validar (selección manual)
-        const selected = selIds.map(id => s.table.find(c => c.id === id))
-        const okSel = selected.every(Boolean) && new Set(selIds).size === selIds.length &&
+        const found = selIds.map(id => s.table.find(c => c.id === id))
+        const selected = /** @type {Card[]} */ (found.filter(c => c != null))
+        const okSel = selected.length === found.length && new Set(selIds).size === selIds.length &&
           isValidCapture(played, selected)
         if (!okSel) { applyFault(s, team, ctx.rng); return s } // combinación inválida = fatal
         applyCapture(s, team, ctx.seat, played, selected, prevLast, true, false)
@@ -442,6 +543,7 @@ export function makeCuarentaEngine () {
 
     // Proyección por asiento: cada quien ve SU mano; del resto, sólo cuántas cartas.
     view (state, seat) {
+      /** @type {GameView} */
       const pub = {
         numPlayers: state.activeSeats.length,
         activeSeats: state.activeSeats,
@@ -456,7 +558,7 @@ export function makeCuarentaEngine () {
         carry: state.carry,
         // cartas expuestas (tiradas fuera de turno) por asiento, EN ORDEN. Públicas.
         committed: Object.fromEntries(state.activeSeats.map(id =>
-          [id, (state.committed?.[id] || []).map(cid => (state.hands[id] || []).find(c => c.id === cid)).filter(Boolean)])),
+          [id, /** @type {Card[]} */ ((state.committed?.[id] || []).map(cid => (state.hands[id] || []).find(c => c.id === cid)).filter(Boolean))])),
         dealer: state.dealerIdx != null ? state.activeSeats[state.dealerIdx] : null,
         // corte por la data (sin revelar las cartas ajenas hasta terminar)
         draw: state.phase === 'draw'
@@ -476,17 +578,17 @@ export function makeCuarentaEngine () {
         lastEvents: state.lastEvents,
         finished: state.finished,
         winnerTeam: state.winnerTeam,
-        endReason: state.endReason
+        endReason: state.endReason,
+        mySeat: seat || null,
+        myTeam: (seat != null && state.teamOf[seat] != null) ? state.teamOf[seat] : null,
+        myHand: (seat && state.hands[seat]) ? state.hands[seat] : []
       }
-      pub.mySeat = seat || null
-      pub.myTeam = (seat != null && state.teamOf[seat] != null) ? state.teamOf[seat] : null
-      pub.myHand = (seat && state.hands[seat]) ? state.hands[seat] : []
       return pub
     },
 
     isOver (state) {
       if (!state.finished) return null
-      const seats = state.teams[state.winnerTeam] || []
+      const seats = (state.winnerTeam != null && state.teams[state.winnerTeam]) || []
       return { winner: seats.join('+'), reason: state.endReason || 'match' }
     }
   }

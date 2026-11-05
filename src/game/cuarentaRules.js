@@ -11,11 +11,19 @@
 // sigue al 7). Por eso cada carta lleva `seq` (posición de escalera 1..10) y `sum`
 // (valor aditivo para capturar por suma; sólo las numéricas 1..7 suman).
 
+/** @typedef {import('../types').Card} Card */
+/** @typedef {import('../types').Suit} Suit */
+/** @typedef {import('../types').Rank} Rank */
+
+/** @type {Suit[]} */
 export const SUITS = ['d', 'h', 's', 'c'] // diamante, corazón, espada (pica), trébol
+/** @type {Record<Suit, string>} */
 export const SUIT_SYMBOL = { d: '♦', h: '♥', s: '♠', c: '♣' }
+/** @type {Record<Suit, boolean>} */
 export const SUIT_RED = { d: true, h: true, s: false, c: false }
 
 // rango → { seq, sum }. sum=null en las figuras (no participan en capturas por suma).
+/** @type {Array<{ r: Rank, seq: number, sum: number | null }>} */
 export const RANKS = [
   { r: 'A', seq: 1, sum: 1 },
   { r: '2', seq: 2, sum: 2 },
@@ -29,8 +37,12 @@ export const RANKS = [
   { r: 'K', seq: 10, sum: null }
 ]
 
-/** Baraja de 40 cartas, ordenada (sin barajar). Cada carta: { id, r, s, seq, sum }. */
+/**
+ * Baraja de 40 cartas, ordenada (sin barajar). Cada carta: { id, r, s, seq, sum }.
+ * @returns {Card[]}
+ */
 export function makeDeck () {
+  /** @type {Card[]} */
   const deck = []
   for (const s of SUITS) {
     for (const { r, seq, sum } of RANKS) {
@@ -40,7 +52,13 @@ export function makeDeck () {
   return deck
 }
 
-/** Fisher–Yates con rng determinista (sembrado por el motor). No muta el original. */
+/**
+ * Fisher–Yates con rng determinista (sembrado por el motor). No muta el original.
+ * @template T
+ * @param {T[]} array
+ * @param {() => number} [rng] sin él, Math.random
+ * @returns {T[]}
+ */
 export function shuffle (array, rng) {
   const a = array.slice()
   for (let i = a.length - 1; i > 0; i--) {
@@ -60,14 +78,23 @@ export function shuffle (array, rng) {
 //     valor (suma de exactamente 2 cartas; las viejas J/Q/K no suman).
 // La escalera debe ser contigua desde la base; el jugador puede parar donde quiera.
 
-/** ¿El conjunto `selected` es una captura VÁLIDA para la carta `played`? */
+/**
+ * ¿El conjunto `selected` es una captura VÁLIDA para la carta `played`?
+ * @param {Card} played
+ * @param {Card[]} selected
+ * @returns {boolean}
+ */
 export function isValidCapture (played, selected) {
   if (!Array.isArray(selected) || selected.length === 0) return false
   return fillsRun(selected.slice(), played.seq, true)
 }
 
 /** ¿`selected` forma una escalera contigua que ARRANCA en `base`? (robo de
- *  continuación: no hay carta resultado; debe empezar justo en `base`). */
+ *  continuación: no hay carta resultado; debe empezar justo en `base`).
+ * @param {Card[]} selected
+ * @param {number} base
+ * @returns {boolean}
+ */
 export function isRunFrom (selected, base) {
   if (!Array.isArray(selected) || selected.length === 0) return false
   return fillsRun(selected.slice(), base, true)
@@ -77,6 +104,12 @@ export function isRunFrom (selected, base) {
 // La SUMA de 2 cartas SÓLO vale en la BASE (el valor de la carta tirada). Los
 // peldaños siguientes de la escalera son SIEMPRE cartas sueltas — no se puede
 // "subir" un peldaño con una suma (p. ej. 2,3,4 con un 4 NO se lleva el 2+3 como 5).
+/**
+ * @param {Card[]} cards
+ * @param {number} v
+ * @param {boolean} atBase
+ * @returns {boolean}
+ */
 function fillsRun (cards, v, atBase) {
   if (cards.length === 0) return true
   // peldaño v con UNA carta de ese seq
@@ -89,10 +122,12 @@ function fillsRun (cards, v, atBase) {
   // suma de 2 numéricas que totalicen v: SÓLO en la base
   if (atBase && v <= 7) {
     for (let i = 0; i < cards.length; i++) {
-      if (cards[i].sum == null) continue
+      const a = cards[i].sum
+      if (a == null) continue
       for (let j = i + 1; j < cards.length; j++) {
-        if (cards[j].sum == null) continue
-        if (cards[i].sum + cards[j].sum === v) {
+        const b = cards[j].sum
+        if (b == null) continue
+        if (a + b === v) {
           const rest = cards.filter((_, k) => k !== i && k !== j)
           if (fillsRun(rest, v + 1, false)) return true
         }
@@ -105,10 +140,21 @@ function fillsRun (cards, v, atBase) {
 /** Valor TOPE de la escalera formada por `selected` arrancando en `base` (asume
  *  que ya es una captura válida). Sirve para saber qué valor consecutivo queda
  *  «colgando» y por tanto robable. Devuelve el último valor cubierto. */
+/**
+ * @param {Card[]} selected
+ * @param {number} base
+ * @returns {number}
+ */
 export function runTop (selected, base) {
   const top = topFrom(selected.slice(), base, true)
   return top == null ? base : top
 }
+/**
+ * @param {Card[]} cards
+ * @param {number} v
+ * @param {boolean} atBase
+ * @returns {number | null}
+ */
 function topFrom (cards, v, atBase) {
   if (cards.length === 0) return v - 1
   for (let i = 0; i < cards.length; i++) {
@@ -119,10 +165,12 @@ function topFrom (cards, v, atBase) {
   }
   if (atBase && v <= 7) {
     for (let i = 0; i < cards.length; i++) {
-      if (cards[i].sum == null) continue
+      const a = cards[i].sum
+      if (a == null) continue
       for (let j = i + 1; j < cards.length; j++) {
-        if (cards[j].sum == null) continue
-        if (cards[i].sum + cards[j].sum === v) {
+        const b = cards[j].sum
+        if (b == null) continue
+        if (a + b === v) {
           const r = topFrom(cards.filter((_, k) => k !== i && k !== j), v + 1, false)
           if (r != null) return r
         }
@@ -135,13 +183,18 @@ function topFrom (cards, v, atBase) {
 /** ¿Existe ALGUNA captura posible al tirar `played` sobre `table`? (basta con que
  *  el peldaño base —igual o suma de 2— se pueda cubrir). Define si se abre la
  *  ventana de "robar" y si el turno queda en espera. */
+/**
+ * @param {Card[]} table
+ * @param {Card} played
+ * @returns {boolean}
+ */
 export function captureExists (table, played) {
   if (table.some(c => c.seq === played.seq)) return true
   if (played.sum != null) {
-    const nums = table.filter(c => c.sum != null)
+    const nums = /** @type {number[]} */ (table.map(c => c.sum).filter(n => n != null))
     for (let i = 0; i < nums.length; i++) {
       for (let j = i + 1; j < nums.length; j++) {
-        if (nums[i].sum + nums[j].sum === played.seq) return true
+        if (nums[i] + nums[j] === played.seq) return true
       }
     }
   }
@@ -154,6 +207,8 @@ export function captureExists (table, played) {
  * PARES: 20 cartas = 6; cada 2 cartas más = +2 (una carta impar redondea hacia
  * arriba). Tiers: 20→6, 21-22→8, 23-24→10, … 40→26. Menos de 20: nada (si ninguno
  * llega a 20, nadie suma).
+ * @param {number} cardCount
+ * @returns {number}
  */
 export function carton (cardCount) {
   if (cardCount < 20) return 0
@@ -162,13 +217,19 @@ export function carton (cardCount) {
 }
 
 /** ¿La mano recién repartida (5 cartas) trae ronda? 3 iguales = ronda (2 pts),
- *  4 iguales = doble ronda (4 pts). Devuelve { type, pts, r } o null. */
+ *  4 iguales = doble ronda (4 pts). Devuelve { type, pts, r } o null.
+ * @param {Card[]} hand
+ * @returns {{ type: 'ronda' | 'dobleRonda', pts: number, r: Rank } | null}
+ */
 export function findRonda (hand) {
+  /** @type {Partial<Record<Rank, number>>} */
   const byRank = {}
   for (const c of hand) byRank[c.r] = (byRank[c.r] || 0) + 1
+  /** @type {{ type: 'ronda', pts: number, r: Rank } | null} */
   let best = null
-  for (const r in byRank) {
-    const n = byRank[r]
+  for (const key in byRank) {
+    const r = /** @type {Rank} */ (key)
+    const n = byRank[r] || 0
     if (n >= 4) return { type: 'dobleRonda', pts: 4, r }
     if (n >= 3 && !best) best = { type: 'ronda', pts: 2, r }
   }

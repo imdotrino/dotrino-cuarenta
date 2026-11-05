@@ -17,43 +17,58 @@ import { createVaultReputation } from '@dotrino/reputation'
 import { createVaultProfileProvider } from '@dotrino/profile'
 import { makeCuarentaEngine, setPendingConfig } from '@/game/cuarentaEngine'
 
+/** @typedef {import('@/types').RoomSnapshot} RoomSnapshot */
+/** @typedef {import('@/types').RoomListing} RoomListing */
+/** @typedef {import('@/types').PeerEntry} PeerEntry */
+/** @typedef {import('@/types').SeatId} SeatId */
+/** @typedef {import('@dotrino/lobby').Room} Room */
+/** @typedef {import('@dotrino/reputation').VaultReputation} VaultReputation */
+/** @typedef {import('@dotrino/reputation').EloEntry} EloEntry */
+
 const GAME_ID = 'cuarenta'
 const SEATS = ['p1', 'p2', 'p3', 'p4']
 
 const engine = makeCuarentaEngine()
 
 // ── estado reactivo (singleton de módulo) ──────────────────────────
+/** @type {import('@dotrino/lobby').Lobby | null} */
 let lobby = null
+/** @type {Identity | null} */
 let identity = null
+/** @type {VaultReputation | null} */
 let reputation = null
+/** @type {ReturnType<typeof createVaultProfileProvider> | null} */
 let profileProvider = null
 
-const room = shallowRef(null)
-const snapshot = ref(null)
+const room = shallowRef(/** @type {Room | null} */ (null))
+const snapshot = ref(/** @type {RoomSnapshot | null} */ (null))
 const connected = ref(false)
-const mode = ref(null) // null | 'host' | 'guest'
-const visibility = ref(null)
-const roomId = ref(null)
-const myToken = ref(null)
-const publicRooms = ref([])
-const myPubkey = ref(null)
+const mode = ref(/** @type {'host' | 'guest' | null} */ (null))
+const visibility = ref(/** @type {string | null} */ (null))
+const roomId = ref(/** @type {string | null} */ (null))
+const myToken = ref(/** @type {string | null} */ (null))
+const publicRooms = ref(/** @type {RoomListing[]} */ ([]))
+const myPubkey = ref(/** @type {string | null} */ (null))
 // El nickname vive ÚNICAMENTE en el vault de identidad (id.dotrino.com); este
 // ref es solo su espejo reactivo. Sin copia paralela en localStorage.
 const myNickname = ref('')
-const peerIdentities = ref(new Map())
-const trustMap = ref(new Map())
-const connectionError = ref(null)
+const peerIdentities = ref(/** @type {Map<string, PeerEntry>} */ (new Map()))
+const trustMap = ref(/** @type {Map<string, number>} */ (new Map()))
+const connectionError = ref(/** @type {string | null} */ (null))
 
 const nickModalOpen = ref(false)
+/** @type {(() => unknown) | null} */
 let pendingNickAction = null
 
-const myElo = ref(null)
+const myElo = ref(/** @type {EloEntry | null} */ (null))
+/** @type {Map<string, { v: EloEntry, ts: number }>} */
 const _eloCache = new Map()
 const ELO_TTL = 60000
 
 export { STATUS }
 
 // ── identidad ──────────────────────────────────────────────────────
+/** @returns {Promise<Identity | null>} */
 async function ensureIdentity () {
   if (identity) return identity
   try { identity = await Identity.connect() } catch (_) { identity = null }
@@ -65,6 +80,7 @@ async function ensureIdentity () {
 
 // Instancia de identidad ya conectada (la MISMA del lobby: una sola conexión al
 // vault por app). La consume <dotrino-topbar> para el avatar del perfil activo.
+/** @returns {Promise<Identity | null>} */
 async function getIdentity () {
   await ensureIdentity()
   return identity
@@ -89,10 +105,12 @@ async function refreshIdentity () {
 async function refreshPeers () {
   const s = snapshot.value
   if (!s) return
+  /** @type {Set<string>} */
   const pubkeys = new Set()
   for (const id of SEATS) { const seat = s.seats?.[id]; if (seat?.pubkey) pubkeys.add(seat.pubkey) }
   for (const sp of (s.spectators || [])) if (sp.pubkey) pubkeys.add(sp.pubkey)
-  pubkeys.delete(myPubkey.value)
+  if (myPubkey.value) pubkeys.delete(myPubkey.value)
+  /** @type {Map<string, PeerEntry>} */
   const next = new Map()
   for (const pk of pubkeys) {
     const nameSeat = SEATS.map(id => s.seats?.[id]).find(seat => seat?.pubkey === pk)
@@ -105,6 +123,11 @@ async function refreshPeers () {
 }
 
 // ── ELO (registro de reputación compartido) ────────────────────────
+/**
+ * ELO de un jugador en el Cuarenta (con caché de un minuto); `null` si no hay registro.
+ * @param {string | null | undefined} pubkey
+ * @returns {Promise<EloEntry | null>}
+ */
 async function eloOf (pubkey) {
   if (!pubkey || !reputation || typeof reputation.eloOf !== 'function') return null
   const hit = _eloCache.get(pubkey)
@@ -119,18 +142,28 @@ async function loadMyElo () {
   _eloCache.delete(myPubkey.value)
   myElo.value = await eloOf(myPubkey.value)
 }
+/**
+ * ¿Dos pubkeys (JWK en texto) son la misma llave?
+ * @param {string | null | undefined} a
+ * @param {string | null | undefined} b
+ */
 function samePubkeyStr (a, b) {
   if (!a || !b) return false
   if (a === b) return true
   try { const pa = JSON.parse(a), pb = JSON.parse(b); return pa.x === pb.x && pa.y === pb.y && pa.crv === pb.crv } catch (_) { return false }
 }
+/** @param {import('@/types').MatchResultEvent} ev */
 async function onResult (ev) {
   if (!reputation || typeof reputation.reportResult !== 'function' || !ev?.coSigned) return
   try {
     const res = await reputation.reportResult(ev.coSigned)
     const meIsA = samePubkeyStr(ev.a, myPubkey.value)
     const raw = meIsA ? res.a : res.b
-    if (raw) { const mine = { elo: raw.value, games: raw.count }; myElo.value = mine; _eloCache.set(myPubkey.value, { v: mine, ts: Date.now() }) }
+    if (raw) {
+      const mine = { elo: raw.value, games: raw.count }
+      myElo.value = mine
+      if (myPubkey.value) _eloCache.set(myPubkey.value, { v: mine, ts: Date.now() })
+    }
     _eloCache.delete(meIsA ? ev.b : ev.a)
   } catch (_) {}
 }
@@ -140,19 +173,30 @@ async function onResult (ev) {
 // (roomId == token del host, un lobby = una sala a la vez). Por eso el lobby se
 // (re)crea con los asientos del tamaño elegido (2 ó 4) al hostear; el guest los
 // adopta del estado que difunde el host, así que su tamaño local da igual.
+/** @type {string | null} */
 let lobbySeatsKey = null
 
+/**
+ * @param {number} size 2 ó 4
+ * @returns {SeatId[]}
+ */
 function seatsForSize (size) {
   return size === 2 ? ['p1', 'p2'] : ['p1', 'p2', 'p3', 'p4']
 }
 
+/**
+ * @param {SeatId[]} seatsArr
+ * @returns {Promise<boolean>}
+ */
 async function ensureLobby (seatsArr) {
   await ensureIdentity()
   const key = seatsArr.join(',')
   if (lobby && lobbySeatsKey === key) { connected.value = true; return true }
   if (lobby) { try { await lobby.destroy() } catch (_) {} lobby = null }
+  /** @type {import('@dotrino/lobby').Lobby} */
+  let created
   try {
-    lobby = await createLobby({
+    created = await createLobby({
       gameId: GAME_ID,
       seats: seatsArr,
       engine,
@@ -165,21 +209,42 @@ async function ensureLobby (seatsArr) {
       matchmaking: { preferContacts: true }
     })
   } catch (e) {
-    connectionError.value = e?.message || 'Error de conexión'
+    connectionError.value = errorMessage(e) || 'Error de conexión'
     return false
   }
+  lobby = created
   lobbySeatsKey = key
-  myToken.value = lobby.transport?.token || null
+  myToken.value = lobbyToken(created)
   myPubkey.value = identity?.me?.publickey || myPubkey.value
   connected.value = true
   connectionError.value = null
-  lobby.on('rooms-changed', () => { listPublicHosts() })
+  created.on('rooms-changed', () => { listPublicHosts() })
   await refreshIdentity()
   loadMyElo()
   return true
 }
 
+/**
+ * El `message` de un error cualquiera (o undefined).
+ * @param {unknown} e
+ * @returns {string | undefined}
+ */
+function errorMessage (e) {
+  return /** @type {{ message?: string } | null | undefined} */ (e)?.message
+}
+
+/**
+ * El token del transporte del lobby: es el `roomId` de la sala que abre el host.
+ * `transport` existe en el Lobby en marcha, aunque el .d.ts del pilar no lo declara.
+ * @param {import('@dotrino/lobby').Lobby | null} l
+ * @returns {string | null}
+ */
+function lobbyToken (l) {
+  return /** @type {{ transport?: { token: string | null } } | null} */ (l)?.transport?.token || null
+}
+
 // Para navegar/listar/unir basta con un lobby cualquiera (4 asientos por defecto).
+/** @returns {Promise<boolean>} */
 async function connect () { const ok = await ensureLobby(seatsForSize(4)); if (ok) attemptRejoin(); return ok }
 
 // ── volver a la mesa tras refrescar ─────────────────────────────────
@@ -210,6 +275,7 @@ async function attemptRejoin () {
     }
   } catch (_) {}
   // 2) Volver a la sala guardada tras un refresh.
+  /** @type {{ roomId?: string, role?: string, size?: number, vis?: string, ts?: number } | null} */
   let saved = null
   try { saved = JSON.parse(localStorage.getItem(ROOM_KEY) || 'null') } catch (_) {}
   if (!saved || !saved.roomId) return
@@ -220,10 +286,15 @@ async function attemptRejoin () {
   } catch (_) { clearSavedRoom() }
 }
 
+/**
+ * Engancha la sala al estado reactivo.
+ * @param {Room} r
+ * @returns {Room}
+ */
 function _bind (r) {
   room.value = r
   roomId.value = r.roomId
-  const refresh = () => { snapshot.value = { ...r.state }; refreshPeers() }
+  const refresh = () => { snapshot.value = /** @type {RoomSnapshot} */ ({ ...r.state }); refreshPeers() }
   r.on('update', refresh)
   r.on('state', refresh)
   r.on('ended', () => { clearSavedRoom(); refresh() })
@@ -235,6 +306,11 @@ function _bind (r) {
   return r
 }
 
+/**
+ * @param {string} [vis] 'public' | 'private'
+ * @param {number} [size] 2 ó 4
+ * @returns {Promise<boolean>}
+ */
 async function createTable (vis = 'public', size = 2) {
   // (Re)crea el lobby con los asientos del tamaño de mesa elegido (2 ó 4).
   _hostSize = size === 4 ? 4 : 2
@@ -245,30 +321,37 @@ async function createTable (vis = 'public', size = 2) {
   setPendingConfig({ activeSeats: seatList })
   mode.value = 'host'
   visibility.value = vis
-  roomId.value = lobby?.transport?.token || null
+  roomId.value = lobbyToken(lobby)
   myToken.value = roomId.value
   try {
+    if (!lobby) throw new Error('lobby is not connected')
     const r = await lobby.createRoom({ playerName: myNickname.value })
     _bind(r)
     return true
-  } catch (e) { connectionError.value = e?.message; return false }
+  } catch (e) { connectionError.value = errorMessage(e) ?? null; return false }
 }
 
 // `hostPubkey` es la identidad del host: con ella el saludo sale SELLADO desde el primer
 // mensaje (@dotrino/lobby ≥ 0.8.0). La trae el resumen de la lista de mesas; por un enlace
 // compartido no viene, y entonces la mesa se presenta y la pregunta.
+/**
+ * @param {string} hostToken
+ * @param {string | null} [hostPubkey]
+ * @returns {Promise<boolean>}
+ */
 async function joinTable (hostToken, hostPubkey = null) {
   if (!hostToken) return false
   if (!lobby) { if (!await connect()) return false }
   mode.value = 'guest'
   visibility.value = null
-  const known = hostPubkey || (publicRooms.value.find(r => r.roomId === hostToken) || {}).hostPubkey || null
+  const known = hostPubkey || publicRooms.value.find(r => r.roomId === hostToken)?.hostPubkey || null
   try {
-    const r = await lobby.joinRoom(hostToken, { playerName: myNickname.value, hostPubkey: known })
+    if (!lobby) throw new Error('lobby is not connected')
+    const r = await lobby.joinRoom(hostToken, { playerName: myNickname.value, hostPubkey: known ?? undefined })
     _bind(r)
     return true
   } catch (e) {
-    connectionError.value = e?.message || 'No se pudo unir'
+    connectionError.value = errorMessage(e) || 'No se pudo unir'
     return false
   }
 }
@@ -285,9 +368,11 @@ async function leaveTable () {
   return true
 }
 
+/** @returns {Promise<RoomListing[]>} */
 async function listPublicHosts () {
   if (!lobby) return []
   try {
+    /** @type {RoomListing[]} */
     const rooms = await lobby.listRooms({ timeout: 900 })
     await Promise.all(rooms.map(async (r) => { if (r.hostPubkey) { const e = await eloOf(r.hostPubkey); if (e) r.hostElo = e.elo } }))
     publicRooms.value = rooms
@@ -296,8 +381,10 @@ async function listPublicHosts () {
 }
 
 // ── asientos / arranque ────────────────────────────────────────────
+/** @param {SeatId} id */
 function takeSeat (id) { room.value?.takeSeat(id); return true }
 function leaveSeat () { room.value?.leaveSeat(); return true }
+/** @param {boolean} b */
 function setReady (b) { room.value?.setReady(b); return true }
 function spectate () { room.value?.spectate(); return true }
 
@@ -317,6 +404,10 @@ function startGame () {
 
 // Tira una carta; `captured` = ids de cartas de la mesa que se quieren levantar
 // (vacío = sólo botar). Combinación inválida = error fatal (lo decide el motor).
+/**
+ * @param {string} cardId
+ * @param {string[]} [captured]
+ */
 function playCard (cardId, captured = []) {
   const r = room.value
   if (!r) return false
@@ -326,6 +417,10 @@ function playCard (cardId, captured = []) {
 // Robar: durante la ventana de claim o de carry. `captured` = ids de la mesa.
 // `ctx` lleva a QUÉ apunta el robo (claimCardId o carryValue) para que un robo que
 // llega tarde (la ventana ya cambió) se IGNORE en vez de tomarse como inválido.
+/**
+ * @param {string[]} [captured]
+ * @param {{ claimCardId?: string | null, carryValue?: number | null }} [ctx]
+ */
 function rob (captured = [], ctx = {}) {
   const r = room.value
   if (!r) return false
@@ -333,23 +428,29 @@ function rob (captured = [], ctx = {}) {
   return true
 }
 // Corte por la data: elegir una carta boca abajo (índice 0..39).
+/** @param {number} index */
 function cut (index) { room.value?.action({ type: 'cut', index }); return true }
 function resign () { room.value?.action({ type: 'resign' }); return true }
 
 // ── nickname requerido ─────────────────────────────────────────────
 const hasNick = computed(() => !!(myNickname.value && myNickname.value.trim().length >= 2))
+/** @param {(() => unknown) | null} [fn] lo que se hace al tener nick */
 function requireNick (fn) {
   if (hasNick.value) { if (fn) fn(); return }
   pendingNickAction = typeof fn === 'function' ? fn : null
   nickModalOpen.value = true
 }
+/**
+ * @param {string} v
+ * @returns {Promise<boolean>}
+ */
 async function submitNick (v) {
   const name = (v || '').trim()
   if (name.length < 2) return false
   try {
     await setMyNickname(name)
   } catch (e) {
-    console.warn('Could not save the nickname to the identity:', e?.message || e)
+    console.warn('Could not save the nickname to the identity:', errorMessage(e) || e)
     return false
   }
   nickModalOpen.value = false
@@ -360,6 +461,7 @@ async function submitNick (v) {
 function cancelNick () { nickModalOpen.value = false; pendingNickAction = null }
 
 // ── identidad / reputación (UI de perfil/rating) ───────────────────
+/** @param {string} nick */
 async function setMyNickname (nick) {
   const v = (nick || '').trim().slice(0, 20)
   await ensureIdentity()
@@ -368,6 +470,11 @@ async function setMyNickname (nick) {
   await identity.setMyNickname(v)
   myNickname.value = identity.me?.nickname || v
 }
+/**
+ * @param {string} pubkey
+ * @param {number} rating
+ * @param {string} [notes]
+ */
 async function ratePeer (pubkey, rating, notes) {
   await ensureIdentity()
   if (!identity) throw new Error('Identity vault not available')
@@ -377,6 +484,10 @@ async function ratePeer (pubkey, rating, notes) {
   await refreshIdentity(); await refreshPeers()
   return updated
 }
+/**
+ * @param {string} pubkey
+ * @param {string} nick
+ */
 async function setPeerNickname (pubkey, nick) {
   await ensureIdentity()
   if (!identity) throw new Error('Identity vault not available')

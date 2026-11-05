@@ -36,8 +36,8 @@ const messages = {
     friend: 'amigo',
     newPlayer: 'jugador nuevo',
     reputation: 'reputación',
-    players: (n) => `${n} jugador${n > 1 ? 'es' : ''}`,
-    seatsFree: (n) => `${n} lugar${n > 1 ? 'es' : ''} libre${n > 1 ? 's' : ''}`,
+    players: (/** @type {number} */ n) => `${n} jugador${n > 1 ? 'es' : ''}`,
+    seatsFree: (/** @type {number} */ n) => `${n} lugar${n > 1 ? 'es' : ''} libre${n > 1 ? 's' : ''}`,
     full: 'Completa',
     errJoin: 'No se pudo unir a la mesa.',
     errCode: 'Código de mesa inválido.',
@@ -50,7 +50,7 @@ const messages = {
     ready: 'Listo',
     notReady: 'Cancelar listo',
     waitingPlayers: 'Esperando jugadores (2 ó 4)',
-    waitingCount: (n, max) => `Esperando jugadores… ${n}/${max} sentados`,
+    waitingCount: (/** @type {number} */ n, /** @type {number} */ max) => `Esperando jugadores… ${n}/${max} sentados`,
     starting: 'Empezando…',
     waitingReady: 'Esperando que todos estén listos…',
     waitingHostStart: 'Esperando que el anfitrión empiece…',
@@ -62,7 +62,7 @@ const messages = {
     teamB: 'Equipo B',
     // juego
     yourTurn: 'Tu turno',
-    turnOf: (name) => `Turn de ${name}`,
+    turnOf: (/** @type {string} */ name) => `Turno de ${name}`,
     deck: 'Mazo',
     onTable: 'En la mesa',
     captured: 'Cartas',
@@ -82,7 +82,7 @@ const messages = {
     evCaidaEnRonda: '¡Caída en ronda! +2',
     evRonda: '¡Ronda! +2',
     evDobleRonda: '¡Cuatro iguales! Gana la mesa',
-    evCarton: (p) => `Cartón +${p}`,
+    evCarton: (/** @type {number} */ p) => `Cartón +${p}`,
     evChica: '¡Chica ganada!',
     evFault: '¡Pasa la mano con 10!',
     // captura manual / robar
@@ -91,14 +91,14 @@ const messages = {
     clearSel: 'Quitar selección',
     selectHint: 'Selecciona cartas de la mesa y tira la que las levanta (o tira sin seleccionar).',
     claimHint: '¡Hay cartas para levantar! Selecciona la combinación y róbalas.',
-    claimWaiting: (name) => `${name} dejó cartas por levantar…`,
+    claimWaiting: (/** @type {string} */ name) => `${name} dejó cartas por levantar…`,
     carryHint: 'Quedó escalera por robar — selecciona y roba (antes de la próxima jugada).',
     exposedHint: 'Cartas expuestas (tiradas fuera de turno): se juegan obligatoriamente en orden.',
     // corte por la data
     drawTitle: 'Corte por la data',
     drawPick: 'Elige una carta: la más alta reparte (empata por palo ♦ ♥ ♠ ♣).',
-    drawWaiting: (n, total) => `Elegiste. Esperando… ${n}/${total} cortaron.`,
-    dataWon: (name) => `${name} gana la data y reparte`,
+    drawWaiting: (/** @type {number} */ n, /** @type {number} */ total) => `Elegiste. Esperando… ${n}/${total} cortaron.`,
+    dataWon: (/** @type {string} */ name) => `${name} gana la data y reparte`,
     dealerBadge: 'Reparte (data)',
     countTitle: 'Conteo del cartón',
     countCards: 'cartas',
@@ -107,7 +107,7 @@ const messages = {
     winTitle: '¡Partida terminada!',
     youWin: '¡Ganaste! 🏆',
     youLose: 'Perdiste',
-    teamWins: (t) => `Gana el ${t} 🏆`,
+    teamWins: (/** @type {string} */ t) => `Gana el ${t} 🏆`,
     byResign: 'por abandono',
     rateRivals: 'Calificar jugadores',
     backToLobby: 'Volver al lobby',
@@ -141,7 +141,7 @@ const messages = {
     waitingVerify: 'Esperando verificación de identidad…',
     customNick: 'Nickname personalizado',
     customNickPh: 'Sobrescribe el nickname público',
-    suspicion: (made, known) => `⚠ Te han consultado ${made} personas; conocías ${known}.`
+    suspicion: (/** @type {number} */ made, /** @type {number} */ known) => `⚠ Te han consultado ${made} personas; conocías ${known}.`
   },
   en: {
     brand: 'Cuarenta',
@@ -174,8 +174,8 @@ const messages = {
     friend: 'friend',
     newPlayer: 'new player',
     reputation: 'reputation',
-    players: (n) => `${n} player${n > 1 ? 's' : ''}`,
-    seatsFree: (n) => `${n} open seat${n > 1 ? 's' : ''}`,
+    players: (/** @type {number} */ n) => `${n} player${n > 1 ? 's' : ''}`,
+    seatsFree: (/** @type {number} */ n) => `${n} open seat${n > 1 ? 's' : ''}`,
     full: 'Full',
     errJoin: "Couldn't join the table.",
     errCode: 'Invalid table code.',
@@ -187,7 +187,7 @@ const messages = {
     ready: 'Ready',
     notReady: 'Not ready',
     waitingPlayers: 'Waiting for players (2 or 4)',
-    waitingCount: (n, max) => `Waiting for players… ${n}/${max} seated`,
+    waitingCount: (/** @type {number} */ n, /** @type {number} */ max) => `Waiting for players… ${n}/${max} seated`,
     starting: 'Starting…',
     waitingReady: 'Waiting for everyone to be ready…',
     waitingHostStart: 'Waiting for the host to start…',
@@ -198,7 +198,7 @@ const messages = {
     teamA: 'Team A',
     teamB: 'Team B',
     yourTurn: 'Your turn',
-    turnOf: (name) => `${name}'s turn`,
+    turnOf: (/** @type {string} */ name) => `${name}'s turn`,
     deck: 'Deck',
     onTable: 'On the table',
     captured: 'Cards',
@@ -217,7 +217,7 @@ const messages = {
     evCaidaEnRonda: 'Caída on ronda! +2',
     evRonda: 'Ronda! +2',
     evDobleRonda: 'Four of a kind! Wins the set',
-    evCarton: (p) => `Cards +${p}`,
+    evCarton: (/** @type {number} */ p) => `Cards +${p}`,
     evChica: 'Set won!',
     evFault: 'Hand passes — 10 to the rivals!',
     rob: 'Steal',
@@ -225,13 +225,13 @@ const messages = {
     clearSel: 'Clear selection',
     selectHint: 'Select table cards and throw the card that takes them (or throw without selecting).',
     claimHint: 'There are cards to take! Select the combination and steal them.',
-    claimWaiting: (name) => `${name} left cards to be taken…`,
+    claimWaiting: (/** @type {string} */ name) => `${name} left cards to be taken…`,
     carryHint: 'A run is left to steal — select and steal it (before the next play).',
     exposedHint: 'Exposed cards (thrown out of turn): must be played in order.',
     drawTitle: 'Cut for the deal',
     drawPick: 'Pick a card: the highest deals (ties break by suit ♦ ♥ ♠ ♣).',
-    drawWaiting: (n, total) => `You picked. Waiting… ${n}/${total} cut.`,
-    dataWon: (name) => `${name} wins the deal`,
+    drawWaiting: (/** @type {number} */ n, /** @type {number} */ total) => `You picked. Waiting… ${n}/${total} cut.`,
+    dataWon: (/** @type {string} */ name) => `${name} wins the deal`,
     dealerBadge: 'Deals (data)',
     countTitle: 'Card count',
     countCards: 'cards',
@@ -239,7 +239,7 @@ const messages = {
     winTitle: 'Game over!',
     youWin: 'You win! 🏆',
     youLose: 'You lost',
-    teamWins: (t) => `${t} wins 🏆`,
+    teamWins: (/** @type {string} */ t) => `${t} wins 🏆`,
     byResign: 'by resignation',
     rateRivals: 'Rate players',
     backToLobby: 'Back to lobby',
@@ -270,7 +270,7 @@ const messages = {
     waitingVerify: 'Waiting for identity verification…',
     customNick: 'Custom nickname',
     customNickPh: 'Overrides the public nickname',
-    suspicion: (made, known) => `⚠ ${made} people have looked you up; you knew ${known}.`
+    suspicion: (/** @type {number} */ made, /** @type {number} */ known) => `⚠ ${made} people have looked you up; you knew ${known}.`
   }
 }
 
@@ -294,17 +294,19 @@ function migrateLegacyLang () {
   } catch (_) { /* modo privado */ }
 }
 
+/** @returns {'es' | 'en'} el idioma guardado, o el del navegador */
 function detect () {
   migrateLegacyLang()
   let saved = ''
   try { saved = (typeof localStorage !== 'undefined' && localStorage.getItem(LANG_KEY)) || '' } catch (_) {}
   if (saved === 'es' || saved === 'en') return saved
-  const nav = (typeof navigator !== 'undefined' && (navigator.language || '')).toLowerCase()
+  const nav = (typeof navigator !== 'undefined' ? navigator.language || '' : '').toLowerCase()
   return nav.startsWith('es') ? 'es' : 'en'
 }
 
 export const lang = ref(detect())
 export const t = computed(() => messages[lang.value] || messages.es)
+/** @param {string} l */
 export function setLang (l) {
   lang.value = (l === 'en') ? 'en' : 'es'
   try { localStorage.setItem(LANG_KEY, lang.value) } catch (_) {}

@@ -64,7 +64,7 @@ const props = defineProps({ open: { type: Boolean, default: false } })
 const emit = defineEmits(['close'])
 
 const connectionStore = useConnectionStore()
-const fileInput = ref(null)
+const fileInput = ref(/** @type {HTMLInputElement | null} */ (null))
 
 const nickname = ref(connectionStore.myNickname || '')
 const nicknameStatus = ref('')
@@ -80,6 +80,7 @@ const shortPubkey = computed(() => {
   return k.length > 80 ? k.slice(0, 40) + '…' + k.slice(-20) : k
 })
 
+/** @type {ReturnType<typeof setTimeout> | null} */
 let nicknameTimer = null
 
 watch(() => props.open, (open) => {
@@ -126,7 +127,7 @@ const onExport = async () => {
     ioStatus.value = t.value.idExported
   } catch (e) {
     ioError.value = true
-    ioStatus.value = t.value.exportFail + (e.message || e)
+    ioStatus.value = t.value.exportFail + (/** @type {{ message?: string }} */ (e).message || e)
   } finally { busy.value = false }
 }
 
@@ -135,11 +136,14 @@ const onImportClick = () => fileInput.value?.click()
 // El archivo elegido se retiene hasta que el usuario confirme en el modal propio
 // (nada de confirm() del navegador).
 const confirmImportOpen = ref(false)
+/** @type {File | null} */
 let pendingImportFile = null
 
+/** @param {Event} event el `change` del input de archivo */
 const onImportFile = (event) => {
-  const file = event.target.files?.[0]
-  event.target.value = ''
+  const input = /** @type {HTMLInputElement} */ (event.target)
+  const file = input.files?.[0]
+  input.value = ''
   if (!file) return
   pendingImportFile = file
   confirmImportOpen.value = true
@@ -166,7 +170,7 @@ const doImport = async () => {
     ioStatus.value = t.value.idImported
   } catch (e) {
     ioError.value = true
-    ioStatus.value = t.value.invalidFile + (e.message || e)
+    ioStatus.value = t.value.invalidFile + (/** @type {{ message?: string }} */ (e).message || e)
   } finally { busy.value = false }
 }
 </script>
