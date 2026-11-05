@@ -3,7 +3,7 @@
 // nuevo se vea en la siguiente recarga y no quede atrapado por el max-age del CDN;
 // offline cae a caché. Resto cache-first con refresco en segundo plano (los
 // assets llevan hash de contenido). Subir CACHE en cada cambio.
-const CACHE = 'cuarenta-v6'
+const CACHE = 'cuarenta-v7'
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png']
 
 self.addEventListener('install', (e) => {

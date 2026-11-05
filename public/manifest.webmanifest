@@ -1,7 +1,7 @@
 {
   "name": "Cuarenta (40)",
   "short_name": "Cuarenta",
-  "description": "El 40 ecuatoriano en línea, para 2 ó 4 jugadores. P2P, identidad propia, sin rastreadores.",
+  "description": "El 40 ecuatoriano en línea, para 2 o 4 jugadores. Las cartas van directas entre quienes juegan, con tu propia identidad y sin rastreadores.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
